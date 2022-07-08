@@ -66,8 +66,8 @@ class PostTrackingClass(object):
         _camera_topic_ = rospy.get_param('~camera_topic')
         _uav_name_ = rospy.get_param('~uav_name')
 
-        self.landmarkpub = rospy.Publisher(_uav_name_ + '/landmarkCoord' , landmark, \
-                                            queue_size=10)
+        self.landmarkpub = rospy.Publisher(_uav_name_ + '/landmarkCoord' , \
+                                                    landmark, queue_size=10)
         self.subscriber = rospy.Subscriber(_camera_topic_, Image, \
                                             self.Callback)
         self.image_pub = rospy.Publisher(_uav_name_ + "/mediapipe/image_raw", \
