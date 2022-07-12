@@ -65,6 +65,11 @@ class PostTrackingClass(object):
         #Loading parameters from the launch file
         _camera_topic_ = rospy.get_param('~camera_topic')
         _uav_name_ = rospy.get_param('~uav_name')
+        self._static_mode_ = rospy.get_param('~static_mode')
+        self._model_complexity_= rospy.get_param('~model_complexity')
+        self._enable_segmentation_= rospy.get_param('~enable_segmentation')
+        self._min_detection_confidence_= rospy.get_param('~min_detection_confidence')
+        self._min_tracking_confidence_= rospy.get_param('~min_tracking_confidence')
 
         self.landmarkpub = rospy.Publisher(_uav_name_ + '/landmarkCoord' , \
                                                 landmark, queue_size=10)
@@ -79,7 +84,7 @@ class PostTrackingClass(object):
         self.landmarkcoords.y = array.array('f',(0 for f in range(0,33)))
         self.landmarkcoords.vis = array.array('f',(0 for f in range(0,33)))
 
-        rospy.loginfo("Landmark Detector Initialized")
+        rospy.loginfo("Pose Tracker Initialized")
 
     def Callback(self, ros_data, image_encoding='bgr8'):
   
@@ -148,22 +153,34 @@ class PostTrackingClass(object):
         # landnmark_img, imageRGB, imageBGR, image_2BGR = NONE
 
 def main():
-    rospy.init_node('Landmark_Detector', anonymous= True)
+    rospy.init_node('Pose_Tracker', anonymous= True)
     rate = rospy.Rate(50)
     posetrackobject = PostTrackingClass()
     
     with mp_pose.Pose(
-        static_image_mode=False, # True for image input, False for video input
-        model_complexity=1, # 0, 1 or 2
-        enable_segmentation=True,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.6) as pose:
+        # True for image input, False for video input
+        static_image_mode= posetrackobject._static_mode_, 
+        model_complexity= posetrackobject._model_complexity_, # 0, 1 or 2
+        enable_segmentation= posetrackobject._enable_segmentation_,
+        min_detection_confidence= posetrackobject._min_detection_confidence_,
+        min_tracking_confidence= posetrackobject._min_tracking_confidence_) \
+                                                                     as pose:
 
         while not rospy.is_shutdown():
             if posetrackobject.image==NONE:
                 continue
         
-            rospy.loginfo_once("Entering while")
+            rospy.loginfo_once("Starting Pose Tracking with MediaPipe Parameters: ")
+            rospy.loginfo_once("Static Image Mode: {}".\
+                            format(posetrackobject._static_mode_))
+            rospy.loginfo_once("Segmentation : {}".\
+                            format(posetrackobject._enable_segmentation_))
+            rospy.loginfo_once("Model Complexity: {}".\
+                            format(posetrackobject._model_complexity_))
+            rospy.loginfo_once("Minimun Detection Confidence: {}".\
+                            format(posetrackobject._min_detection_confidence_))
+            rospy.loginfo_once("Minimum Tracking Conficence: {}".\
+                            format(posetrackobject._min_tracking_confidence_))
             posetrackobject.total_frames +=1.0
             posetrackobject.PoseEstimator(pose)
 

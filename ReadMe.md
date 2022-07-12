@@ -20,6 +20,12 @@ catkin build
 ```
 
 ### 2. Install MediaPipe
+For Python: 
+
+```
+pip install mediapipe
+```
+For C++: 
 Follow the steps on the official MediaPipe website [here](https://google.github.io/mediapipe/getting_started/install.html). 
 
 *Note:*  There is currently no way to use MP without Bazel. 

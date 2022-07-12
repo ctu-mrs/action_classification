@@ -1,0 +1,28 @@
+<launch>
+  
+  <arg name="uav_name" default="$(optenv UAV_NAME uav)"/>
+  <arg name="camera_topic" default="$(arg uav_name)/rgbd/color/image_raw"/>
+  <arg name="static_mode" default="False"/>
+  <arg name="model_complexity" default="1"/>
+  <arg name="enable_segmentation" default="True"/>
+  <arg name="min_detection_confidence" default="0.5"/>
+  <arg name="min_tracking_confidence" default="0.6"/>
+
+
+  <!-- <group ns="$(arg uav_name)"> -->
+    <node name="Pose_Tracker" pkg="action_classification" type="Pose_Tracking" output="screen" args="">
+        <!-- <rosparam file="$(find body_movement_swarming)/tmux_scripts/experiments_swarming/custom_configs/landmarkconfig.yaml" command="load" /> -->
+        <param name="uav_name" value="$(arg uav_name)"/>
+        <param name="camera_topic" value="$(arg camera_topic)"/>
+        <param name="static_mode" type="bool" value="$(arg static_mode)"/>
+        <param name="model_complexity" type="int" value="$(arg model_complexity)"/>
+        <param name="enable_segmentation" type="bool" value="$(arg enable_segmentation)"/>
+        <param name="min_detection_confidence" type="double" value="$(arg min_detection_confidence)"/>
+        <param name="min_tracking_confidence" type="double" value="$(arg min_tracking_confidence)"/>
+    </node>
+
+   <!-- <node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=$(arg camera_topic) raw out:=$(arg uav_name)/pose_tracker/image_raw" />  -->
+   <!-- </node> -->
+
+<!-- </group> -->
+</launch>
