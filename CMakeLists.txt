@@ -209,6 +209,11 @@ include_directories(
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
+add_executable(kNNClassifier src/kNN_action_classifier.cpp)
+target_link_libraries(kNNClassifier ${catkin_LIBRARIES}
+${Eigen_LIBRARIES}
+)
+
 
 include_directories(
   include/include_directories(
