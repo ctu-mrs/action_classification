@@ -213,7 +213,10 @@ add_executable(kNNClassifier src/kNN_action_classifier.cpp)
 target_link_libraries(kNNClassifier ${catkin_LIBRARIES}
 ${Eigen_LIBRARIES}
 )
-
+add_executable(FullPoseEmbedder src/pose_embedder.cpp)
+target_link_libraries(FullPoseEmbedder ${catkin_LIBRARIES}
+${Eigen_LIBRARIES}
+)
 
 include_directories(
   include/include_directories(
