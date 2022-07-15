@@ -3,11 +3,12 @@
 #define PoseEmbed_H
 
 #include <iostream>
+#include <bits/stdc++.h>
 #include <stdio.h>
 #include <string>
 #include <vector>
 #include <array>
-#include <opencv2/core/eigen.hpp>
+// #include <opencv2/core/eigen.hpp>
 
 #include<mrs_lib/param_loader.h>
 
@@ -23,7 +24,9 @@ namespace knn_action_classifier
             std::vector<std::string> landmark_names;
 
             Eigen::Matrix<double, 23, 3> 
-                                call(Eigen::Matrix<double, 33, 3> landmarks);            
+                                call(Eigen::Matrix<double, 33, 3> landmarks);
+            int getIndex(std::vector<std::string> v, std::string K);
+            int getIndex(std::vector<int> v, int K);
 
 
 
