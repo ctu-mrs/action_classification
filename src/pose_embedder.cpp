@@ -70,7 +70,22 @@ namespace knn_action_classifier
     Eigen::Matrix<double, 1, 3> FullBodyPoseEmbedder::get_pose_center
                                     (Eigen::Matrix<double, 33, 3> landmarks)
     {
-        
+        Eigen::Matrix<double, 1, 3> left_hip, right_hip, hip_center;
+        left_hip(0,0) = landmarks(getIndex(landmark_names, "left_hip"), 0);
+        left_hip(0,1) = landmarks(getIndex(landmark_names, "left_hip"), 1);
+        left_hip(0,2) = landmarks(getIndex(landmark_names, "left_hip"), 2);
+
+        left_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 0);
+        right_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 1);
+        right_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 2);
+
+        for (int i = 0; i<3; i++)
+        {
+            hip_center(0,i) = (left_hip(0,i) + right_hip(0,i)) * 0.5;
+        }
+
+        return hip_center;
+
     }
 
     double get_pose_size(Eigen::Matrix<double, 33, 3> landmarks)
