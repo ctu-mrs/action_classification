@@ -99,7 +99,8 @@ namespace knn_action_classifier
         right_shoulder = landmarks.row(
                                 getIndex(landmark_names, "right_shoulder"));
 
-        shoulder_center_size = (left_shoulder + right_shoulder) * 0.5;
+        shoulder_center_size << ((left_shoulder + right_shoulder) * 0.5)(0,0), 
+                                ((left_shoulder + right_shoulder) * 0.5)(0,1);
         torso_size = (hip_center_size-shoulder_center_size).norm();
         max_distance = ((landmarks2D.rowwise() - hip_center_size)
                                                 .rowwise().norm()).maxCoeff();
