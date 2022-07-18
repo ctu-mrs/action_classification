@@ -29,11 +29,11 @@ namespace knn_action_classifier
             FullBodyPoseEmbedder::call(Eigen::Matrix<double, 33, 3> landmarks)
     {
         Eigen::Matrix<double, 23, 3> embedding;
-        Eigen::Matrix<double, 33, 3> landmark_fvar;
+        Eigen::Matrix<double, 33, 3> landmark_fvar_call;
 
-        landmark_fvar = landmarks;
-        landmark_fvar = normalize_pose_landmarks(landmark_fvar);
-        embedding = get_pose_distance_embedding(landmark_fvar);
+        landmark_fvar_call = landmarks;
+        landmark_fvar_call = normalize_pose_landmarks(landmark_fvar_call);
+        embedding = get_pose_distance_embedding(landmark_fvar_call);
         return embedding;
 
     }            
@@ -58,7 +58,7 @@ namespace knn_action_classifier
             }
         }
 
-        pose_size = get_pose_size(landmark_fvar);
+        pose_size = get_pose_size(landmark_fvar, torso_size_multiplier_var);
         landmark_fvar /= pose_size;
         landmark_fvar *= 100;
         return landmark_fvar;
@@ -71,30 +71,155 @@ namespace knn_action_classifier
                                     (Eigen::Matrix<double, 33, 3> landmarks)
     {
         Eigen::Matrix<double, 1, 3> left_hip, right_hip, hip_center;
-        left_hip(0,0) = landmarks(getIndex(landmark_names, "left_hip"), 0);
-        left_hip(0,1) = landmarks(getIndex(landmark_names, "left_hip"), 1);
-        left_hip(0,2) = landmarks(getIndex(landmark_names, "left_hip"), 2);
+        left_hip = landmarks.row(getIndex(landmark_names, "left_hip"));
 
-        left_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 0);
-        right_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 1);
-        right_hip(0,0) = landmarks(getIndex(landmark_names, "right_hip"), 2);
+        right_hip = landmarks.row(getIndex(landmark_names, "right_hip"));
 
-        for (int i = 0; i<3; i++)
-        {
-            hip_center(0,i) = (left_hip(0,i) + right_hip(0,i)) * 0.5;
-        }
+        hip_center = (left_hip + right_hip) * 0.5;
 
         return hip_center;
 
     }
 
-    double get_pose_size(Eigen::Matrix<double, 33, 3> landmarks)
+    double FullBodyPoseEmbedder::get_pose_size(Eigen::Matrix<double, 33, 3> landmarks,
+                                         double torso_size_multiplier)
     {
-        
+        Eigen::Matrix<double, 1, 2> landmarks2D;
+        landmarks2D << landmarks(0,0), landmarks(0,1);
+        double torso_size, max_distance;
+        Eigen::Matrix<double, 1, 2> pose_center_for_size, hip_center_size, 
+                                            shoulder_center_size;
+        Eigen::Matrix<double, 1, 3> pose_center, left_hip, right_hip, 
+                                        left_shoulder, right_shoulder;
+        hip_center_size(0,0) = get_pose_center(landmarks)(0,0);
+        hip_center_size(0,1) = get_pose_center(landmarks)(0,1);
+
+        left_shoulder = landmarks.row(
+                                getIndex(landmark_names, "left_shoulder"));
+        right_shoulder = landmarks.row(
+                                getIndex(landmark_names, "right_shoulder"));
+
+        shoulder_center_size = (left_shoulder + right_shoulder) * 0.5;
+        torso_size = (hip_center_size-shoulder_center_size).norm();
+        max_distance = ((landmarks2D.rowwise() - hip_center_size)
+                                                .rowwise().norm()).maxCoeff();
+        return std::max(torso_size* torso_size_multiplier_var, max_distance);
     }
 
 
-    int FullBodyPoseEmbedder::getIndex(std::vector<std::string> v, std::string K)
+    Eigen::Matrix<double, 23, 3> FullBodyPoseEmbedder::
+                        get_pose_distance_embedding(Eigen::Matrix<double, 33, 3>
+                        landmarks)
+    {
+        Eigen::Matrix<double, 23, 3> embedding;
+        embedding.row(0) << get_distance(
+            get_average_by_names(landmarks, "left_hip", "right_hip"), 
+            get_average_by_names(landmarks, "left_shoulder", "right_shoulder")
+                                        );
+
+        embedding.row(1) << 
+            get_dist_by_names(landmarks, "left_shoulder", "left_elbow");
+        embedding.row(2) << 
+            get_dist_by_names(landmarks, "right_shoulder", "right_elbow");
+
+        embedding.row(3) << 
+            get_dist_by_names(landmarks, "left_elbow", "left_wrist");
+        embedding.row(4) << 
+            get_dist_by_names(landmarks, "right_elbow", "right_wrist");
+
+        embedding.row(5) << 
+            get_dist_by_names(landmarks, "left_hip", "left_knee");
+        embedding.row(6) << 
+            get_dist_by_names(landmarks, "right_hip", "right_knee");
+
+        embedding.row(7) << 
+            get_dist_by_names(landmarks, "left_knee", "left_ankle");
+        embedding.row(8) << 
+            get_dist_by_names(landmarks, "right_knee", "right_ankle");
+
+
+
+        
+        embedding.row(9) << 
+            get_dist_by_names(landmarks, "left_shoulder", "left_wrist");
+        embedding.row(10) << 
+            get_dist_by_names(landmarks, "right_shoulder", "right_wrist");
+
+        embedding.row(11) << 
+            get_dist_by_names(landmarks, "left_hip", "right_ankle");
+        embedding.row(12) << 
+            get_dist_by_names(landmarks, "right_hip", "right_ankle");
+
+
+
+            
+        embedding.row(13) << 
+            get_dist_by_names(landmarks, "left_hip", "left_wrist");
+        embedding.row(14) << 
+            get_dist_by_names(landmarks, "right_hip", "right_wrist");
+
+
+
+
+        embedding.row(15) << 
+            get_dist_by_names(landmarks, "left_shoulder", "left_ankle");
+        embedding.row(16) << 
+            get_dist_by_names(landmarks, "right_shoulder", "right_ankle");
+
+        embedding.row(17) << 
+            get_dist_by_names(landmarks, "left_hip", "left_wrist");
+        embedding.row(18) << 
+            get_dist_by_names(landmarks, "right_hip", "right_wrist");
+
+
+
+
+        embedding.row(19) << 
+            get_dist_by_names(landmarks, "left_elbow", "right_elbow");
+        embedding.row(20) << 
+            get_dist_by_names(landmarks, "left_knee", "right_knee");
+
+
+        embedding.row(21) << 
+            get_dist_by_names(landmarks, "left_wrist", "right_wrist");
+        embedding.row(22) << 
+            get_dist_by_names(landmarks, "left_ankle", "right_ankle");
+        
+
+        return embedding;
+    }
+
+    
+    Eigen::Matrix<double, 1, 3> FullBodyPoseEmbedder::
+                        get_average_by_names(Eigen::Matrix<double, 33, 3>
+                        landmarks, std::string name_from, std::string name_to)
+    {
+
+        Eigen::Matrix<double, 1, 3> vector_from, vector_to;
+        vector_from = landmarks.row(getIndex(landmark_names, name_from));
+        vector_to = landmarks.row(getIndex(landmark_names, name_to));
+        return (vector_from + vector_to) * 0.5;
+    }
+
+    Eigen::Matrix<double, 1, 3> FullBodyPoseEmbedder::
+                        get_dist_by_names(Eigen::Matrix<double, 33, 3>
+                        landmarks, std::string name_from, std::string name_to)
+    {
+        Eigen::Matrix<double, 1, 3> vector_from, vector_to;
+        vector_from = landmarks.row(getIndex(landmark_names, name_from));
+        vector_to = landmarks.row(getIndex(landmark_names, name_to));
+        return vector_from - vector_to;
+    }
+
+    Eigen::Matrix<double, 1, 3> FullBodyPoseEmbedder::
+                        get_distance(Eigen::Matrix<double, 1, 3>
+                        vector_from, Eigen::Matrix<double, 1, 3> vector_to)
+    {
+        return (vector_from - vector_to);
+    }
+
+    int FullBodyPoseEmbedder::getIndex(std::vector<std::string> v, 
+                                                        std::string K)
     {
         auto it = find(v.begin(), v.end(), K);
         int index = -1;
