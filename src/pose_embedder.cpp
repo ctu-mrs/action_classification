@@ -147,7 +147,7 @@ namespace knn_action_classifier
             get_dist_by_names(landmarks, "right_shoulder", "right_wrist");
 
         embedding.row(11) << 
-            get_dist_by_names(landmarks, "left_hip", "right_ankle");
+            get_dist_by_names(landmarks, "left_hip", "left_ankle");
         embedding.row(12) << 
             get_dist_by_names(landmarks, "right_hip", "right_ankle");
 
@@ -209,14 +209,14 @@ namespace knn_action_classifier
         Eigen::Matrix<double, 1, 3> vector_from, vector_to;
         vector_from = landmarks.row(getIndex(landmark_names, name_from));
         vector_to = landmarks.row(getIndex(landmark_names, name_to));
-        return vector_from - vector_to;
+        return (vector_to - vector_from);
     }
 
     Eigen::Matrix<double, 1, 3> FullBodyPoseEmbedder::
                         get_distance(Eigen::Matrix<double, 1, 3>
                         vector_from, Eigen::Matrix<double, 1, 3> vector_to)
     {
-        return (vector_from - vector_to);
+        return (vector_to - vector_from);
     }
 
     int FullBodyPoseEmbedder::getIndex(std::vector<std::string> v, 
@@ -260,16 +260,24 @@ namespace knn_action_classifier
         }
         return index;
     }
+    // void FullBodyPoseEmbedder::test_func(Eigen::Matrix<double, 33, 3>
+    //                     landmarks)
+    // {
+    //     std::cout << get_pose_center(landmarks);
+    // }
 
 }
 
     int main()
     {
         knn_action_classifier::FullBodyPoseEmbedder embedderobj(2.5);
-        std::vector<std::string> v = { "1", "45", "54", "71", "76", "17" };
-	    // Value whose index
-	    // needs to be found
-	    std::string K = "54";
-	    embedderobj.getIndex(v, K);
+        
+        Eigen::Matrix<double, 33, 3> test_mat;
+        test_mat << 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33, 
+                    34,	35,	36,	37	,38, 39,40,	41,	42,	43,	44,	45,	46,	47,	48,	49,50,	51,	52,	53,	54,	55,	56,
+                    57, 58,	59,60,	61,	62,	63,	64,	65,	66,	67,	68,	69,70,	71,	72,	73,	74,	75,	76,	77,	78,	79,
+                    80, 81,	82,	83,	84,	85,	86,	87,	88,	89,90,	91,	92,	93,	94,	95,	96,	97,	98,	99;
+        knn_action_classifier::FullBodyPoseEmbedder posembedobj(2.5);
+        std::cout<<posembedobj.call(test_mat);
         return 0;
     }

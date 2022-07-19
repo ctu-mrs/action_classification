@@ -31,6 +31,8 @@ namespace knn_action_classifier
             Eigen::Matrix<double, 1, 3> 
                         get_pose_center(Eigen::Matrix<double, 33, 3>
                         landmarks);
+            // void test_func(Eigen::Matrix<double, 33, 3>
+            //             landmarks);
 
 
         private: 
