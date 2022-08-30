@@ -117,6 +117,24 @@ class Full3DBodyPoseEmbedder(object):
       pairwise distances.
     """
     embedding = np.array([
+      # One Joint
+        self._get_distance(
+          self._get_average_by_names(landmarks, 'left_hip', 'right_hip'),
+          self._get_average_by_names(landmarks, 'left_shoulder', 'right_shoulder')),
+
+        self._get_distance_by_names(landmarks, 'left_shoulder', 'left_elbow'),
+        self._get_distance_by_names(landmarks, 'right_shoulder', 'right_elbow'),
+
+        self._get_distance_by_names(landmarks, 'left_elbow', 'left_wrist'),
+        self._get_distance_by_names(landmarks, 'right_elbow', 'right_wrist'),
+
+        self._get_distance_by_names(landmarks, 'left_hip', 'left_knee'),
+        self._get_distance_by_names(landmarks, 'right_hip', 'right_knee'),
+
+        self._get_distance_by_names(landmarks, 'left_knee', 'left_ankle'),
+        self._get_distance_by_names(landmarks, 'right_knee', 'right_ankle'),
+
+
 
         # Two joints.
 
