@@ -160,14 +160,38 @@ class Full3DBodyPoseEmbedder(object):
         self._get_distance_by_names(landmarks, 'left_wrist', 'right_wrist'),
         self._get_distance_by_names(landmarks, 'left_ankle', 'right_ankle'),
 
-        # Body bent direction.
+        # 3D Angles
+        self._get_angle_embedding_product_by_names(landmarks, 'left_hip', \
+                                              'left_shoulder', 'left_elbow'),
+        self._get_angle_embedding_product_by_names(landmarks, 'right_hip', \
+                                              'right_shoulder', 'right_elbow'),
+        
+        self._get_angle_embedding_product_by_names(landmarks, 'left_shoulder', \
+                                              'left_hip', 'left_knee'),
+        self._get_angle_embedding_product_by_names(landmarks, 'right_shoulder', \
+                                              'right_hip', 'right_knee'),
 
-        # self._get_distance(
-        #     self._get_average_by_names(landmarks, 'left_wrist', 'left_ankle'),
-        #     landmarks[self._landmark_names.index('left_hip')]),
-        # self._get_distance(
-        #     self._get_average_by_names(landmarks, 'right_wrist', 'right_ankle'),
-        #     landmarks[self._landmark_names.index('right_hip')]),
+        self._get_angle_embedding_product_by_names(landmarks, 'left_shoulder',\
+                                              'left_elbow', 'left_wrist'),
+        self._get_angle_embedding_product_by_names(landmarks, 'right_shoulder',\
+                                              'right_elbow', 'right_wrist'),
+                                    
+        self._get_angle_embedding_product_by_names(landmarks, 'left_heel', \
+                                                    'left_knee', 'left_hip'),
+        self._get_angle_embedding_product_by_names(landmarks, 'right_heel', \
+                                                    'right_knee', 'right_hip'),
+
+        self._get_angle_embedding_product( landmarks, 
+          landmarks[self._landmark_names.index('left_knee')],
+          self._get_average_by_names(landmarks, 'left_hip', 'right_hip'),
+          landmarks[self._landmark_names.index('right_knee')]
+        ),
+        self._get_angle_embedding_product( landmarks, 
+          landmarks[self._landmark_names.index('left_elbow')],
+          self._get_average_by_names(landmarks, 'left_shoulder', 'right_shoulder'),
+          landmarks[self._landmark_names.index('right_elbow')]
+        ),
+        
     ])
 
     return embedding
@@ -189,6 +213,15 @@ class Full3DBodyPoseEmbedder(object):
     start_point = landmarks[self._landmark_names.index(startname)]
     mid_point = landmarks[self._landmark_names.index(midname)]
     end_point = landmarks[self._landmark_names.index(endname)]
+    return self._get_angle(landmarks, start_point, mid_point, end_point)
+
+  def _get_normal_by_names(self, landmarks, startname, midname, endname):
+    start_point = landmarks[self._landmark_names.index(startname)]
+    mid_point = landmarks[self._landmark_names.index(midname)]
+    end_point = landmarks[self._landmark_names.index(endname)]
+    return self._get_normal(landmarks, start_point, mid_point, end_point)
+
+  def _get_angle(self, landmarks, start_point, mid_point, end_point):
     line1 = start_point - mid_point
     line2 = end_point - mid_point
     cosine_angle = np.dot(line1 , line2) / (np.linalg.norm(line1) \
@@ -196,10 +229,7 @@ class Full3DBodyPoseEmbedder(object):
     angle = np.arccos(cosine_angle)
     return angle
 
-  def _get_normal_by_names(self, landmarks, startname, midname, endname):
-    start_point = landmarks[self._landmark_names.index(startname)]
-    mid_point = landmarks[self._landmark_names.index(midname)]
-    end_point = landmarks[self._landmark_names.index(endname)]
+  def _get_normal(self, landmarks, start_point, mid_point, end_point):
     line1 = start_point - mid_point
     line2 = end_point - mid_point
     cross_prod = np.cross(line1, line2)
@@ -208,9 +238,19 @@ class Full3DBodyPoseEmbedder(object):
       return norm
     return cross_prod / norm
 
-  def _get_angle_embedding_product(self, landmarks, startname, midname, endname):
+  def _get_angle_embedding_product_by_names(self, landmarks, startname, midname, endname):
     angle = self._get_angle_by_names(landmarks, startname, midname, endname) 
     unit_normal = self._get_normal_by_names(landmarks, startname, midname, endname)
+    # A metric which encodes the angle between the two vectors as the cosine, 
+    # and the angle of the plane as the normal vector
+    return math.cos(angle) * unit_normal
+
+  def _get_angle_embedding_product(self, landmarks, start_point,\
+                                               mid_point, end_point):
+    angle = self._get_angle(landmarks, start_point, mid_point, end_point) 
+    unit_normal = self._get_normal(landmarks, start_point, mid_point, end_point)
+    # A metric which encodes the angle between the two vectors as the cosine, 
+    # and the angle of the plane as the normal vector
     return math.cos(angle) * unit_normal
 
 def main():
