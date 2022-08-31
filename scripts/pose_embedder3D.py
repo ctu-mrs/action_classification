@@ -185,7 +185,7 @@ class Full3DBodyPoseEmbedder(object):
   def _get_distance(self, lmk_from, lmk_to):
     return lmk_to - lmk_from
 
-  def _get_angle_by_names_(self, landmarks, startname, midname, endname):
+  def _get_angle_by_names(self, landmarks, startname, midname, endname):
     start_point = landmarks[self._landmark_names.index(startname)]
     mid_point = landmarks[self._landmark_names.index(midname)]
     end_point = landmarks[self._landmark_names.index(endname)]
@@ -195,6 +195,24 @@ class Full3DBodyPoseEmbedder(object):
                                                     * np.linalg.norm(line2))
     angle = np.arccos(cosine_angle)
     return angle
+
+  def _get_normal_by_names(self, landmarks, startname, midname, endname):
+    start_point = landmarks[self._landmark_names.index(startname)]
+    mid_point = landmarks[self._landmark_names.index(midname)]
+    end_point = landmarks[self._landmark_names.index(endname)]
+    line1 = start_point - mid_point
+    line2 = end_point - mid_point
+    cross_prod = np.cross(line1, line2)
+    norm = np.linalg.norm(cross_prod)
+    if norm == 0:
+      return norm
+    return cross_prod / norm
+
+  def _get_angle_embedding_product(self, landmarks, startname, midname, endname):
+    angle = self._get_angle_by_names(landmarks, startname, midname, endname) 
+    unit_normal = self._get_normal_by_names(landmarks, startname, midname, endname)
+    return math.cos(angle) * unit_normal
+
 def main():
     pose_embedder = Full3DBodyPoseEmbedder()
 
