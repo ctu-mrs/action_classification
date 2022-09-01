@@ -10,6 +10,7 @@
 #include<mrs_lib/param_loader.h>
 #include<sensor_msgs/Image.h>
 #include<eigen3/Eigen/Eigen>
+#include<std_srvs/Trigger.h>
 
 #include<action_classification/landmark.h>
 #include<action_classification/landmark3D.h>
@@ -32,7 +33,15 @@ namespace landmark2Dto3D
 
         void callbackDepthImage(const sensor_msgs::ImageConstPtr& depthImage);
         ros::Subscriber sub_depth_;
+        void callbackLandmarks(const action_classification::landmark& 
+                                                                landmark_data);
+        ros::Subscriber sub_landmark_;
 
+        ros::Publisher landmark3D_;
+        ros::ServiceServer server_run_ladnmark_converter_;
+        bool callbackLandmarkConverterTrigger([[maybe_unused]] 
+            std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+        
     };
 }
 
