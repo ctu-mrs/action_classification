@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(action_classification)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -59,6 +59,7 @@ set(Eigen_LIBRARIES ${Eigen_LIBRARIES})
 add_message_files(DIRECTORY msg FILES
   landmark.msg
   IntStamped.msg
+  landmark3D.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -211,6 +212,10 @@ include_directories(
 # endif()
 add_executable(kNNClassifier src/kNN_action_classifier.cpp)
 target_link_libraries(kNNClassifier ${catkin_LIBRARIES}
+${Eigen_LIBRARIES}
+)
+add_executable(landmark2DTo3D src/landmark2D_to_3D.cpp)
+target_link_libraries(landmark2DTo3D ${catkin_LIBRARIES}
 ${Eigen_LIBRARIES}
 )
 add_executable(FullPoseEmbedder src/pose_embedder.cpp)
