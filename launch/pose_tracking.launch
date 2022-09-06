@@ -9,7 +9,7 @@
   <arg name="min_tracking_confidence" default="0.6"/>
 
 
-  <!-- <group ns="$(arg uav_name)"> -->
+  <group ns="$(arg uav_name)/artur">
     <node name="Pose_Tracker" pkg="action_classification" type="Pose_Tracking" output="screen" args="">
         <!-- <rosparam file="$(find body_movement_swarming)/tmux_scripts/experiments_swarming/custom_configs/landmarkconfig.yaml" command="load" /> -->
         <param name="uav_name" value="$(arg uav_name)"/>
@@ -24,5 +24,5 @@
    <!-- <node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=$(arg camera_topic) raw out:=$(arg uav_name)/pose_tracker/image_raw" />  -->
    <!-- </node> -->
 
-<!-- </group> -->
+</group>
 </launch>

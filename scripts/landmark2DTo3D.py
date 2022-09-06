@@ -6,7 +6,7 @@ import roslib
 
 from mrs_msgs.msg import Float64Stamped
 from std_msgs.msg import Float64, Int16
-from sensor_msgs.msg import CompressedImage, Image
+from sensor_msgs.msg import CompressedImage, Image, CameraInfo
 from action_classification.msg import landmark, landmark3D
 
 import math
@@ -17,24 +17,47 @@ from cv_bridge import CvBridge, CvBridgeError
 
 # Class to subscribe from the Depth topic and landmarks sent by mediapipe, 
 # extract the depth coordinate from respective (x,y) supplied by mediapipe
-# and add it to eh z coordinate of landmarks
-class DepthInfoFromColour(object):
+# and add it to the z coordinate of landmarks
+class DepthInfoExtractor(object):
     def __init__(self):
-        self.br = CvBridge()
-        _colour_topic_ = rospy.get_param('~colour_topic')
         _uav_name_ = rospy.get_param('~uav_name')
         _aligned_depth_topic_ = rospy.get_param('aligned_depth_topic')
         _landmark_topic_ = rospy.get_param('~landmark_topic')
+        _depth_cam_info_topic = rospy.get_param('_depth_cam_info_topic')
 
         self.landmark_sub_ = rospy.Subscriber(_landmark_topic_, landmark,\
                                                 self.landmarkCallback)
         self.depth_sub_ = rospy.Subscriber(_aligned_depth_topic_, Image,\
                                                 self.depthCallback)
-        self.colour_sub_ = rospy.Subscriber(_colour_topic_, Image,\
-                                                self.colourCallback)
+        self.depth_cam_info_sub = rospy.Subscriber(_depth_cam_info_topic,\
+                                        CameraInfo, self.depthCamInfoCallback)
         
-        self.landmark3D_pub_ = rospy.Publisher(_uav_name_ +\
-                        '/arthur/landnmark3Dcoords', landmark3D, queue_size=10)
+        self.landmark3D_pub_ = rospy.Publisher('/landmark3Dcoords',\
+                                                landmark3D, queue_size=10)
 
-        self.landmark3D_coords = landmark3D()
-        self.landmark3D_coords
+        self.landmark3D_coords_ = landmark3D()
+        self.landmark2D_coords_ = landmark()
+
+    def landmarkCallback(self, ros_data):
+        self.landmark2D_coords_ = ros_data
+
+    def depthCallback(self, ros_data):
+        self.depth_image_ = ros_data 
+    
+    def depthCamInfoCallback(self, ros_data):
+        self.depth_cam_info_ = ros_data
+ 
+
+
+def main():
+    rospy.init_node('Depth_Info_Extractor', anonymous=True)
+    depth_info_extractor_object = DepthInfoExtractor()
+
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print ("Shutting down Depth Info Extractor")
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    main()
