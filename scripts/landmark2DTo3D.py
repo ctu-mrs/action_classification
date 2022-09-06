@@ -46,6 +46,16 @@ class DepthInfoExtractor(object):
     
     def depthCamInfoCallback(self, ros_data):
         self.depth_cam_info_ = ros_data
+    
+    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info_):
+        screen_size = (depth_cam_info_.width, depth_cam_info_.height)
+        return tuple(round(coord * dimension) for coord, dimension in \
+                                                zip(coord_array, screen_size))
+        
+
+    def depthExtractor(self, max_distance = 6):
+        avg_left_shoulder_depth = NONE
+         
  
 
 
