@@ -47,14 +47,41 @@ class DepthInfoExtractor(object):
     def depthCamInfoCallback(self, ros_data):
         self.depth_cam_info_ = ros_data
     
-    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info_):
-        screen_size = (depth_cam_info_.width, depth_cam_info_.height)
+    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
+        screen_size = (depth_cam_info.width, depth_cam_info.height)
         return tuple(round(coord * dimension) for coord, dimension in \
                                                 zip(coord_array, screen_size))
         
 
     def depthExtractor(self, max_distance = 6):
+        landmark2D_coords = self.landmark2D_coords_
+        depth_image = self.depth_image_
+        depth_cam_info = self.depth_cam_info_
+        left_shoulder_normalized_coord = (landmark2D_coords.x[self.getLandmarkIndexByName(landmark2D_coords,\
+                "left_shoulder")], landmark2D_coords.y[self.getLandmarkIndexByName(landmark2D_coords,\
+                "left_shoulder")])
+        left_shoulder_depth_pixel = self.normalizedToPixelCoordinates\
+                            (left_shoulder_normalized_coord, depth_cam_info)
+        right_shoulder_normalized_coord = (landmark2D_coords.x[self.getLandmarkIndexByName(landmark2D_coords,\
+                "right_shoulder")], landmark2D_coords.y[self.getLandmarkIndexByName(landmark2D_coords,\
+                "right_shoulder")])
+        right_shoulder_depth_pixel = self.normalizedToPixelCoordinates\
+                            (left_shoulder_normalized_coord, depth_cam_info)
+        left_hip_normalized_coord = (landmark2D_coords.x[self.getLandmarkIndexByName(landmark2D_coords,\
+                "left_hip")], landmark2D_coords.y[self.getLandmarkIndexByName(landmark2D_coords,\
+                "left_hip")])
+        left_hip_depth_pixel = self.normalizedToPixelCoordinates\
+                            (left_shoulder_normalized_coord, depth_cam_info)
+        right_hip_normalized_coord = (landmark2D_coords.x[self.getLandmarkIndexByName(landmark2D_coords,\
+                "right_hip")], landmark2D_coords.y[self.getLandmarkIndexByName(landmark2D_coords,\
+                "right_hip")])
+        right_hip_depth_pixel = self.normalizedToPixelCoordinates\
+                            (left_shoulder_normalized_coord, depth_cam_info)
         avg_left_shoulder_depth = NONE
+
+    def getLandmarkIndexByName(self, landmarks2D_or_3D, name):
+        return np.where(landmarks2D_or_3D.name == name)[0][0]
+
          
  
 
