@@ -1,7 +1,7 @@
 <launch>
   
   <arg name="uav_name" default="$(optenv UAV_NAME uav)"/>
-  <arg name="camera_topic" default="$(arg uav_name)/rgbd/color/image_raw"/>
+  <arg name="camera_topic" default="/$(arg uav_name)/rgbd/color/image_raw"/>
   <arg name="static_mode" default="False"/>
   <arg name="model_complexity" default="1"/>
   <arg name="enable_segmentation" default="True"/>
