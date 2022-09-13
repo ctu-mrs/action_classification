@@ -25,6 +25,8 @@ class DepthInfoExtractor(object):
         _landmark_topic_ = rospy.get_param('~landmark_topic')
         _depth_cam_info_topic = rospy.get_param('_depth_cam_info_topic')
 
+        self.bridge_ = CvBridge()
+
         self.landmark_sub_ = rospy.Subscriber(_landmark_topic_, landmark,\
                                                 self.landmarkCallback)
         self.depth_sub_ = rospy.Subscriber(_aligned_depth_topic_, Image,\
@@ -47,32 +49,51 @@ class DepthInfoExtractor(object):
     def depthCamInfoCallback(self, ros_data):
         self.depth_cam_info_ = ros_data
     
-    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
-        screen_size = (depth_cam_info.width, depth_cam_info.height)
-        return tuple(round(coord * dimension) for coord, dimension in \
-                                                zip(coord_array, screen_size))
         
-    # Returns avg depth and depth of hip and shoulder points
-    # (avgDpeth, left_shoulder, right_shoulder, left_hip, right_hip)
-    def avgDepthCalc(self, landmark2D_coords, depth_cam_info,\
-                                            depth_image, max_distance):
-
-        left_shoulder_depth_pixel = self.getPixelCoord("left_shoulder", 
-            landmark2D_coords, depth_cam_info, depth_image, max_distance)
-        right_shoulder_depth_pixel = self.normalizedToPixelCoordinates\
-                            (left_shoulder_normalized_coord, depth_cam_info)
-        left_hip_depth_pixel = self.normalizedToPixelCoordinates\
-                            (left_shoulder_normalized_coord, depth_cam_info)
-        right_hip_depth_pixel = self.normalizedToPixelCoordinates\
-                            (left_shoulder_normalized_coord, depth_cam_info)
-        avg_left_shoulder_depth = NONE
-
     def depthExtractor(self, max_distance = 6):
         landmark2D_coords = self.landmark2D_coords_
         depth_image = self.depth_image_
         depth_cam_info = self.depth_cam_info_
         average_depth_array = self.avgDepthCalc(landmark2D_coords,\
                                     depth_cam_info, depth_image, max_distance)
+
+    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
+        screen_size = (depth_cam_info.width, depth_cam_info.height)
+        return tuple(round(coord * dimension) for coord, dimension in \
+                                                zip(coord_array, screen_size))
+
+    # Returns avg depth and depth of hip and shoulder points
+    # (avgDepth, left_shoulder, right_shoulder, left_hip, right_hip)
+    def avgDepthCalc(self, landmark2D_coords, depth_cam_info,\
+                                            depth_image, max_distance):
+
+        left_shoulder_depth_pixel = self.getPixelCoord("left_shoulder", 
+            landmark2D_coords, depth_cam_info, depth_image, max_distance)
+        right_shoulder_depth_pixel = self.getPixelCoord("right_shoulder", 
+            landmark2D_coords, depth_cam_info, depth_image, max_distance)
+        left_hip_depth_pixel = self.getPixelCoord("left_hip", 
+            landmark2D_coords, depth_cam_info, depth_image, max_distance)
+        right_hip_depth_pixel = self.getPixelCoord("right_hip", 
+            landmark2D_coords, depth_cam_info, depth_image, max_distance)
+
+        top_left_x = min(left_hip_depth_pixel[0], left_shoulder_depth_pixel[0],\
+                    right_hip_depth_pixel[0], right_shoulder_depth_pixel[0])
+        top_left_y = min(left_hip_depth_pixel[1], left_shoulder_depth_pixel[1],\
+                    right_hip_depth_pixel[1], right_shoulder_depth_pixel[1])
+        bot_right_x = max(left_hip_depth_pixel[0], left_shoulder_depth_pixel[0],\
+                    right_hip_depth_pixel[0], right_shoulder_depth_pixel[0])
+        bot_right_y = max(left_hip_depth_pixel[1], left_shoulder_depth_pixel[1],\
+                    right_hip_depth_pixel[1], right_shoulder_depth_pixel[1])
+
+        cv_image = self.bridge_.imgmsg_to_cv2(depth_image, depth_image.encoding)
+        depth_rect_array = np.empty()
+
+        for x_start in range(top_left_x, bot_right_x):
+            for y_start in range(top_left_y, bot_right_y):
+                np.append(depth_rect_array, cv_image[y_start, x_start])
+
+        avg_person_dist = np.percentile(depth_rect_array, 25)
+
         
     def getPixelCoord(self, name, landmark2D_coords, depth_cam_info,\
                                             depth_image, max_distance):
