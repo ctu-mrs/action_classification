@@ -71,11 +71,11 @@ class PostTrackingClass(object):
         self._min_detection_confidence_= rospy.get_param('~min_detection_confidence')
         self._min_tracking_confidence_= rospy.get_param('~min_tracking_confidence')
 
-        self.landmarkpub = rospy.Publisher(_uav_name_ + '/landmarkCoord' , \
+        self.landmarkpub = rospy.Publisher('landmarkCoord' , \
                                                 landmark, queue_size=10)
         self.subscriber = rospy.Subscriber(_camera_topic_, Image, \
                                             self.Callback)
-        self.image_pub = rospy.Publisher(_uav_name_ + "/mediapipe/image_raw", \
+        self.image_pub = rospy.Publisher("mediapipe/image_raw", \
                                                 Image, queue_size=10)
 
         # Initializing empty landmark-type variable

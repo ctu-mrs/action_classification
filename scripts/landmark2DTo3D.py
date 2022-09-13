@@ -21,9 +21,9 @@ from cv_bridge import CvBridge, CvBridgeError
 class DepthInfoExtractor(object):
     def __init__(self):
         _uav_name_ = rospy.get_param('~uav_name')
-        _aligned_depth_topic_ = rospy.get_param('aligned_depth_topic')
+        _aligned_depth_topic_ = rospy.get_param('~aligned_depth_topic')
         _landmark_topic_ = rospy.get_param('~landmark_topic')
-        _depth_cam_info_topic = rospy.get_param('_depth_cam_info_topic')
+        _depth_cam_info_topic = rospy.get_param('depth_cam_info_topic')
 
         self.bridge_ = CvBridge()
 
@@ -56,6 +56,7 @@ class DepthInfoExtractor(object):
         depth_cam_info = self.depth_cam_info_
         average_depth_array = self.avgDepthCalc(landmark2D_coords,\
                                     depth_cam_info, depth_image, max_distance)
+        print (average_depth_array)
 
     def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
         screen_size = (depth_cam_info.width, depth_cam_info.height)
@@ -93,6 +94,7 @@ class DepthInfoExtractor(object):
                 np.append(depth_rect_array, cv_image[y_start, x_start])
 
         avg_person_dist = np.percentile(depth_rect_array, 25)
+        return avg_person_dist
 
         
     def getPixelCoord(self, name, landmark2D_coords, depth_cam_info,\
@@ -116,7 +118,12 @@ class DepthInfoExtractor(object):
 
 def main():
     rospy.init_node('Depth_Info_Extractor', anonymous=True)
+    rate = rospy.Rate(50)
     depth_info_extractor_object = DepthInfoExtractor()
+    while not rospy.is_shutdown():
+        rospy.loginfo_once("In While")
+        depth_info_extractor_object.depthExtractor()
+        rate.sleep()
 
     try:
         rospy.spin()
