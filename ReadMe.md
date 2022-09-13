@@ -6,6 +6,7 @@
 ```
 cd ~/git
 git clone git@github.com:akash1306/action_classification.git
+git checkout pythonAlternatives
 ```
 ```
 cd ~/
