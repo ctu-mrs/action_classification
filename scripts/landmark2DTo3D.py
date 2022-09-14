@@ -23,7 +23,28 @@ class DepthInfoExtractor(object):
         _uav_name_ = rospy.get_param('~uav_name')
         _aligned_depth_topic_ = rospy.get_param('~aligned_depth_topic')
         _landmark_topic_ = rospy.get_param('~landmark_topic')
-        _depth_cam_info_topic = rospy.get_param('depth_cam_info_topic')
+        _depth_cam_info_topic = rospy.get_param('~depth_cam_info_topic')
+
+        self.landmark_names_ = [
+            'nose',
+            'left_eye_inner', 'left_eye', 'left_eye_outer',
+            'right_eye_inner', 'right_eye', 'right_eye_outer',
+            'left_ear', 'right_ear',
+            'mouth_left', 'mouth_right',
+            'left_shoulder', 'right_shoulder',
+            'left_elbow', 'right_elbow',
+            'left_wrist', 'right_wrist',
+            'left_pinky_1', 'right_pinky_1',
+            'left_index_1', 'right_index_1',
+            'left_thumb_2', 'right_thumb_2',
+            'left_hip', 'right_hip',
+            'left_knee', 'right_knee',
+            'left_ankle', 'right_ankle',
+            'left_heel', 'right_heel',
+            'left_foot_index', 'right_foot_index',
+            ]
+
+
 
         self.bridge_ = CvBridge()
 
@@ -39,24 +60,32 @@ class DepthInfoExtractor(object):
 
         self.landmark3D_coords_ = landmark3D()
         self.landmark2D_coords_ = landmark()
+        self.depth_image_ = Image()
+        self.depth_image_ = None
+        self.depth_cam_info_ = CameraInfo()
 
     def landmarkCallback(self, ros_data):
         self.landmark2D_coords_ = ros_data
 
     def depthCallback(self, ros_data):
-        self.depth_image_ = ros_data 
+        self.depth_image_ = ros_data
+        self.encoding = ros_data.encoding 
+        self.depthExtractor(self.depth_image_, 6)
     
     def depthCamInfoCallback(self, ros_data):
         self.depth_cam_info_ = ros_data
     
         
-    def depthExtractor(self, max_distance = 6):
+    def depthExtractor(self, depth_image, max_distance = 6):
+        if self.depth_image_ ==None or self.landmark2D_coords_==None:
+            print("Null Message")
+            return
         landmark2D_coords = self.landmark2D_coords_
-        depth_image = self.depth_image_
         depth_cam_info = self.depth_cam_info_
         average_depth_array = self.avgDepthCalc(landmark2D_coords,\
                                     depth_cam_info, depth_image, max_distance)
         print (average_depth_array)
+        return
 
     def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
         screen_size = (depth_cam_info.width, depth_cam_info.height)
@@ -86,14 +115,17 @@ class DepthInfoExtractor(object):
         bot_right_y = max(left_hip_depth_pixel[1], left_shoulder_depth_pixel[1],\
                     right_hip_depth_pixel[1], right_shoulder_depth_pixel[1])
 
-        cv_image = self.bridge_.imgmsg_to_cv2(depth_image, depth_image.encoding)
-        depth_rect_array = np.empty()
+        cv_image = self.bridge_.imgmsg_to_cv2(depth_image, self.encoding)
+        depth_rect_array = np.array([])
 
         for x_start in range(top_left_x, bot_right_x):
             for y_start in range(top_left_y, bot_right_y):
-                np.append(depth_rect_array, cv_image[y_start, x_start])
+                depth_rect_array = \
+                    np.append(depth_rect_array, cv_image[y_start, x_start])
+        avg_person_dist = 21000.0        
+        if depth_rect_array.size > 0:
+            avg_person_dist = np.percentile(depth_rect_array, 25)
 
-        avg_person_dist = np.percentile(depth_rect_array, 25)
         return avg_person_dist
 
         
@@ -101,16 +133,14 @@ class DepthInfoExtractor(object):
                                             depth_image, max_distance):
         
         normalized_coord = \
-            (landmark2D_coords.x[self.getLandmarkIndexByName(landmark2D_coords,\
-                name)],\
-            landmark2D_coords.y[self.getLandmarkIndexByName(landmark2D_coords,\
-                name)])
+            (landmark2D_coords.x[self.getLandmarkIndexByName(name)],\
+            landmark2D_coords.y[self.getLandmarkIndexByName(name)])
         depth_pixel = self.normalizedToPixelCoordinates\
                             (normalized_coord, depth_cam_info)
         return depth_pixel
 
-    def getLandmarkIndexByName(self, landmarks2D_or_3D, name):
-        return np.where(landmarks2D_or_3D.name == name)[0][0]
+    def getLandmarkIndexByName(self, name):
+        return np.where(np.array(self.landmark_names_) == name)[0][0]
 
          
  
@@ -122,7 +152,7 @@ def main():
     depth_info_extractor_object = DepthInfoExtractor()
     while not rospy.is_shutdown():
         rospy.loginfo_once("In While")
-        depth_info_extractor_object.depthExtractor()
+        # depth_info_extractor_object.depthExtractor()
         rate.sleep()
 
     try:

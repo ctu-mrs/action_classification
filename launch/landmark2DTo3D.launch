@@ -8,7 +8,7 @@
 
 
   <group ns="$(arg uav_name)/artur">
-    <node name="LadnmarkConverter" pkg="action_classification" type="landmark2DTo3D" output="screen" args="">
+    <node name="Depth_Info_Extractor" pkg="action_classification" type="landmark2DTo3D.py" output="screen" args="">
         <!-- <rosparam file="$(find body_movement_swarming)/tmux_scripts/experiments_swarming/custom_configs/landmarkconfig.yaml" command="load" /> -->
         <param name="uav_name" value="$(arg uav_name)"/>
         <param name="aligned_depth_topic" value="$(arg aligned_depth_topic)"/>
