@@ -24,6 +24,7 @@ class DepthInfoExtractor(object):
         _aligned_depth_topic_ = rospy.get_param('~aligned_depth_topic')
         _landmark_topic_ = rospy.get_param('~landmark_topic')
         _depth_cam_info_topic = rospy.get_param('~depth_cam_info_topic')
+        _max_depth_distance = rospy.get_param('~max_depth_distance')
 
         self.landmark_names_ = [
             'nose',
@@ -58,11 +59,12 @@ class DepthInfoExtractor(object):
         self.landmark3D_pub_ = rospy.Publisher('/landmark3Dcoords',\
                                                 landmark3D, queue_size=10)
 
-        self.landmark3D_coords_ = landmark3D()
         self.landmark2D_coords_ = landmark()
         self.depth_image_ = Image()
         self.depth_image_ = None
         self.depth_cam_info_ = CameraInfo()
+        self.depth_cam_info_ = None
+        self.max_distance_ = _max_depth_distance
 
     def landmarkCallback(self, ros_data):
         self.landmark2D_coords_ = ros_data
@@ -82,15 +84,49 @@ class DepthInfoExtractor(object):
             return
         landmark2D_coords = self.landmark2D_coords_
         depth_cam_info = self.depth_cam_info_
-        average_depth_array = self.avgDepthCalc(landmark2D_coords,\
+        landmark3D_to_send = landmark3D()
+        landmark3D_to_send.header = landmark2D_coords
+        landmark3D_to_send.name = landmark2D_coords.name
+        landmark3D_to_send.vis = landmark2D_coords.vis
+        landmark3D_to_send.x = landmark2D_coords.x
+        landmark3D_to_send.y = landmark2D_coords.y
+        
+        average_depth = self.avgDepthCalc(landmark2D_coords,\
                                     depth_cam_info, depth_image, max_distance)
-        print (average_depth_array)
-        return
 
-    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
-        screen_size = (depth_cam_info.width, depth_cam_info.height)
-        return tuple(round(coord * dimension) for coord, dimension in \
-                                                zip(coord_array, screen_size))
+        if average_depth > self.max_distance_:
+            average_depth = self.max_distance_
+        
+        # Hard Coded according to Realsense's FOV
+        # 1.5mm per pixel at 1m distance => 60 pixels
+        # 9mm per pixel at 6m distance => 10 pixels
+        pixel_scale =  (int)(60 - (average_depth - 1)*10)
+        if pixel_scale % 2 == 0:
+            pixel_scale +=1
+        
+        for landmark_name_var in self.landmark_names_:
+            pixel_coord_of_landmark = self.getPixelCoord(landmark_name_var, \
+                landmark2D_coords, depth_cam_info, depth_image, max_distance)
+            start_pixel_x = (int)(pixel_coord_of_landmark[0] -(pixel_scale-1)/2)
+            start_pixel_y = (int)(pixel_coord_of_landmark[1] -(pixel_scale-1)/2)
+            end_pixel_x = (int)(pixel_coord_of_landmark[0] +( pixel_scale-1)/2)
+            end_pixel_y = (int)(pixel_coord_of_landmark[1] + (pixel_scale-1)/2)
+            local_depth_array = np.array([])
+            cv_image = self.bridge_.imgmsg_to_cv2(depth_image, self.encoding)
+        
+            for x_start in range (start_pixel_x, end_pixel_x):
+                for y_start in range (start_pixel_y, end_pixel_y):
+                    local_depth_array = \
+                        np.append(local_depth_array, cv_image[y_start, x_start])
+                    
+            avg_landmark_depth = average_depth
+            if local_depth_array.size >0:
+                avg_landmark_depth = np.percentile(local_depth_array, 25)
+            
+            landmark_index = self.getLandmarkIndexByName(landmark_name_var)
+            landmark3D_to_send.z[landmark_index] = avg_landmark_depth
+            self.landmark3D_pub_.publish(landmark3D_to_send)
+        
 
     # Returns avg depth and depth of hip and shoulder points
     # (avgDepth, left_shoulder, right_shoulder, left_hip, right_hip)
@@ -122,7 +158,7 @@ class DepthInfoExtractor(object):
             for y_start in range(top_left_y, bot_right_y):
                 depth_rect_array = \
                     np.append(depth_rect_array, cv_image[y_start, x_start])
-        avg_person_dist = 21000.0        
+        avg_person_dist = self.max_distance_        
         if depth_rect_array.size > 0:
             avg_person_dist = np.percentile(depth_rect_array, 25)
 
@@ -138,6 +174,11 @@ class DepthInfoExtractor(object):
         depth_pixel = self.normalizedToPixelCoordinates\
                             (normalized_coord, depth_cam_info)
         return depth_pixel
+
+    def normalizedToPixelCoordinates(self, coord_array, depth_cam_info):
+        screen_size = (depth_cam_info.width, depth_cam_info.height)
+        return tuple(round(coord * dimension) for coord, dimension in \
+                                                zip(coord_array, screen_size))
 
     def getLandmarkIndexByName(self, name):
         return np.where(np.array(self.landmark_names_) == name)[0][0]
