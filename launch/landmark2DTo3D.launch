@@ -5,12 +5,14 @@
   <arg name="aligned_depth_topic" default="/$(arg uav_name)/rgbd/aligned_depth_to_color/image_raw"/>
   <arg name="depth_cam_info_topic" default="/$(arg uav_name)/rgbd/aligned_depth_to_color/camera_info"/>
   <arg name="landmark_topic" default="/$(arg uav_name)/artur/landmarkCoord"/>
+  <arg name="max_depth_distance" default="6"/>
 
 
   <group ns="$(arg uav_name)/artur">
     <node name="Depth_Info_Extractor" pkg="action_classification" type="landmark2DTo3D.py" output="screen" args="">
         <!-- <rosparam file="$(find body_movement_swarming)/tmux_scripts/experiments_swarming/custom_configs/landmarkconfig.yaml" command="load" /> -->
         <param name="uav_name" value="$(arg uav_name)"/>
+        <param name="max_depth_distance" type="double" value="$(arg max_depth_distance)"/>
         <param name="aligned_depth_topic" value="$(arg aligned_depth_topic)"/>
         <param name="depth_cam_info_topic" value="$(arg depth_cam_info_topic)"/>
         <param name="landmark_topic" value="$(arg landmark_topic)"/>
