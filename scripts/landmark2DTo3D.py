@@ -68,7 +68,7 @@ class DepthInfoExtractor(object):
 
     def landmarkCallback(self, ros_data):
         self.landmark2D_coords_ = ros_data
-        self.depthExtractor(self.depth_image_, 6)
+        self.depthExtractor(self.landmark2D_coords_, 6)
 
     def depthCallback(self, ros_data):
         self.depth_image_ = ros_data
@@ -78,11 +78,11 @@ class DepthInfoExtractor(object):
         self.depth_cam_info_ = ros_data
     
         
-    def depthExtractor(self, depth_image, max_distance = 6):
+    def depthExtractor(self, landmark2D_coords, max_distance = 6):
         if self.depth_image_ ==None or self.landmark2D_coords_==None:
             print("Null Message")
             return
-        landmark2D_coords = self.landmark2D_coords_
+        depth_image = self.depth_image_
         depth_cam_info = self.depth_cam_info_
         landmark3D_to_send = landmark3D()
         landmark3D_to_send.header = landmark2D_coords
