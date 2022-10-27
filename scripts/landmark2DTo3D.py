@@ -68,11 +68,11 @@ class DepthInfoExtractor(object):
 
     def landmarkCallback(self, ros_data):
         self.landmark2D_coords_ = ros_data
+        self.depthExtractor(self.depth_image_, 6)
 
     def depthCallback(self, ros_data):
         self.depth_image_ = ros_data
         self.encoding = ros_data.encoding 
-        self.depthExtractor(self.depth_image_, 6)
     
     def depthCamInfoCallback(self, ros_data):
         self.depth_cam_info_ = ros_data
@@ -125,7 +125,7 @@ class DepthInfoExtractor(object):
             
             landmark_index = self.getLandmarkIndexByName(landmark_name_var)
             landmark3D_to_send.z[landmark_index] = avg_landmark_depth
-            self.landmark3D_pub_.publish(landmark3D_to_send)
+        self.landmark3D_pub_.publish(landmark3D_to_send)
         
 
     # Returns avg depth and depth of hip and shoulder points
