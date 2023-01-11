@@ -112,7 +112,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include/action_classification
+  # INCLUDE_DIRS include/action_classification
  # LIBRARIES body_movement_swarming
  CATKIN_DEPENDS geometry_msgs std_srvs nav_msgs roscpp rospy sensor_msgs std_msgs mrs_msgs mrs_lib message_runtime
  DEPENDS Eigen
@@ -210,22 +210,22 @@ include_directories(
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
-add_executable(kNNClassifier src/kNN_action_classifier.cpp)
-target_link_libraries(kNNClassifier ${catkin_LIBRARIES}
-${Eigen_LIBRARIES}
-)
-add_executable(landmark2DTo3D src/landmark2D_to_3D.cpp)
-target_link_libraries(landmark2DTo3D ${catkin_LIBRARIES}
-${Eigen_LIBRARIES}
-)
-add_executable(FullPoseEmbedder src/pose_embedder.cpp)
-target_link_libraries(FullPoseEmbedder ${catkin_LIBRARIES}
-${Eigen_LIBRARIES}
-)
+#add_executable(kNNClassifier src/kNN_action_classifier.cpp)
+#target_link_libraries(kNNClassifier ${catkin_LIBRARIES}
+#${Eigen_LIBRARIES}
+#)
+#add_executable(landmark2DTo3D src/landmark2D_to_3D.cpp)
+#target_link_libraries(landmark2DTo3D ${catkin_LIBRARIES}
+#${Eigen_LIBRARIES}
+#)
+#add_executable(FullPoseEmbedder src/pose_embedder.cpp)
+#target_link_libraries(FullPoseEmbedder ${catkin_LIBRARIES}
+#${Eigen_LIBRARIES}
+#)
 
 include_directories(
   include/include_directories(
-  include/action_classification
+  #include/action_classification
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
 )
