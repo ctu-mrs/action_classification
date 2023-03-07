@@ -35,12 +35,13 @@ class PoseVisualizer(object):
             ]
 
 
-        # self.landmark3D_sub_ = rospy.Subscriber(_landmark3D_topic_, landmark3D,\
-        #                                         self.landmark3DCallback)
-        # self.landmark_sub_ = rospy.Subscriber(_landmark_topic_, landmark,\
-        #                                         self.landmarkCallback)
+        # self.landmark3D_sub_ = rospy.Subscriber(_landmark3D_topic_,\
+        #                        landmark3D, self.landmark3DCallback)
+        # self.landmark_sub_ = rospy.Subscriber(_landmark_topic_,\
+        #                        landmark, self.landmarkCallback)
         
-        self.marker_pub = rospy.Publisher("visualization_marker1", Marker, queue_size = 2)
+        self.marker_pub = rospy.Publisher("visualization_marker1", Marker,\
+                                           queue_size = 2)
         # The second link is oriented at 90 degrees
         self.m = Marker()
         self.m.header.frame_id = "base"

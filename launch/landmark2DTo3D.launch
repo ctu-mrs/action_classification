@@ -5,7 +5,7 @@
   <arg name="aligned_depth_topic" default="/$(arg uav_name)/rgbd/aligned_depth_to_color/image_raw"/>
   <arg name="depth_cam_info_topic" default="/$(arg uav_name)/rgbd/aligned_depth_to_color/camera_info"/>
   <arg name="landmark_topic" default="/$(arg uav_name)/artur/landmarkCoord"/>
-  <arg name="max_depth_distance" default="6"/>
+  <arg name="max_depth_distance" default="6000.0"/>
 
 
   <group ns="$(arg uav_name)/artur">

@@ -16,7 +16,7 @@ class PoseVisualizer(object):
         # _landmark_topic_ = rospy.get_param('~landmark_topic')
         _landmark_topic_ = "/uav1/artur/landmarkCoord"
         # _landmark3D_topic_ = rospy.get_param('~landmark3D_topic')
-        _landmark3D_topic_ = "/uav1/artur/landmark3Dcoord"
+        _landmark3D_topic_ = "/landmark3Dcoord"
         self.landmark_names_ = [
             'nose',
             'left_eye_inner', 'left_eye', 'left_eye_outer',
@@ -46,7 +46,9 @@ class PoseVisualizer(object):
         # The second link is oriented at 90 degrees
 
     def landmark3DCallback(self, ros_data):
+        
         self.m = Marker()
+        print("Hello")
         self.m.header.frame_id = "base"
         self.m.header.stamp = rospy.Time.now()
         self.m.ns = "poses"
@@ -79,7 +81,8 @@ class PoseVisualizer(object):
     def landmarkCallback(self, ros_data):
         lol = None
         # self.m = Marker()
-        # self.m.header.frame_id = "base"
+        # print("lol")
+        # self.m.header.frame_id = "uav1/gps_origin"
         # self.m.header.stamp = rospy.Time.now()
         # self.m.ns = "poses"
         # self.m.id = 1
@@ -88,12 +91,12 @@ class PoseVisualizer(object):
         # self.m.scale.x = 0.05
         # self.m.scale.y = 0.05
         # self.m.scale.z = 0.05
-        # # self.m.pose.position.x = 0
-        # # self.m.pose.position.y = 0
-        # # self.m.pose.position.z = 0
-        # # self.m.pose.orientation.x = 0
-        # # self.m.pose.orientation.y = 0
-        # # self.m.pose.orientation.z = 0
+        # self.m.pose.position.x = 0
+        # self.m.pose.position.y = 0
+        # self.m.pose.position.z = 0
+        # self.m.pose.orientation.x = 0
+        # self.m.pose.orientation.y = 0
+        # self.m.pose.orientation.z = 0
         # self.m.pose.orientation.w = 1
         # self.m.color.r = 0
         # self.m.color.g = 1
