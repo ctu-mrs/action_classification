@@ -1,59 +1,17 @@
-# Action Classification and MediaPipe Integration Package
+# How to proceed
 
-## Installation
+1. We will keep the pose tracking and landmark2Dto3D as it is. 
+2. We will change what comes afterwards
 
-### 1. Clone and build this package
-```
-cd ~/git
-git clone git@github.com:akash1306/action_classification.git
-git checkout pythonAlternatives
-```
-```
-cd ~/
-mkdir john_doe_workspace
-cd john_doe_workspace
-catkin init
-mkdir src
-cd src
-ln -s ~/git/action_classification
-cd ..
-catkin build
-```
-
-### 2. Install MediaPipe
-For Python: 
-
-```
-pip install mediapipe
-```
-For C++: 
-Follow the steps on the official MediaPipe website [here](https://google.github.io/mediapipe/getting_started/install.html). 
-
-*Note:*  There is currently no way to use MP without Bazel. 
-
-### 3. TMUX and Tmuxinator
-***TMUX - terminal multiplexer***
-
-Tmux is a command-line utility that allows splitting a terminal to multiple panels and creating windows (tabs). It is similar to, e.g., Terminator, but runs entirely in the command line. Thus it can be used remotely over ssh. It is scriptable, which makes it ideal for automating processes, where multiple programs are launches simultaneously.
-
-* https://github.com/tmux/tmux
-* We compile tmux 3.0a from sources.
-* List of basic key bindings for our particular setup can be found here: https://github.com/klaxalk/linux-setup/wiki/tmux
-* The key bindings should be familiar to those using Vim.
-
-
-***Tmuxinator - automating tmux***
-
-Tmux itself is very powerful, tmuxinator is just adding some cream to it. Tmuxinator uses .xml files containing a description of a tmux session. It allows us to define and automate complex multi-terminal setups for, e.g., development (one session per program) and simulations. All our simulation startup script are written for tmuxinator.
-
-* https://github.com/tmuxinator/tmuxinator
-
-### 4. MRS System 
-Please follow the instructions on the official repository of MRS for installation. 
-* https://github.com/ctu-mrs/mrs_uav_system
-* Documentation: https://ctu-mrs.github.io/
-
-## To-Do
-
-For example of mediapipe over ROS msg, see pose_treacking
-For example of mediapipe on a video file, see keypoint extraction
+We have two ways to proceed, and it would be better if we try both of them. One is to use HMM and the other is to use GRU network. We will try the HMM way first and complete the implementation. 
+It involves the following
+1. Use knn to classify each frame into predefined gestures
+2. For feature vectors, we will use joint pair vectors, joint angles, joint velocities and joint acc.
+3. We will have to do feature selection and dimension reduction otherwise our vector space will be high dimensional
+4. We will then use HMMs to classify sequence of gestures into movements - HMM require preprocessing
+5. We will do some data augemnetations like noise, rotation and scaling, especially if the drone is moving, thus making the human change size and rotation in succesive frames. 
+6. Regularization
+7. Parameter tuning of knn and HMM
+8. Evaluation - Accuracy, Precision, recall(sensitivity), F1 score and Area under the ROC curve
+9. We will then localize the human in the drone's frame to be able to give relative commands. 
+10. Encode the behavior of robots given certain commands
