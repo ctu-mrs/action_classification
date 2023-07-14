@@ -1,11 +1,11 @@
 #!/usr/bin/env python3 
 import numpy as np
-import array
 import math
+from scipy.spatial import procrustes
 
 class FeatureVectorEmbedder(object):
-  def __init__(self):
-
+  def __init__(self, torso_size_multiplier = 2.5):
+    self._torso_size_multiplier = torso_size_multiplier
     self._landmark_names = [
       'nose',
       'left_shoulder', 'right_shoulder',
@@ -16,7 +16,8 @@ class FeatureVectorEmbedder(object):
       'left_heel', 'right_heel',
       ]                                                                                                  
 
-  def __call__(self, landmarks):
+  def __call__(self, landmarks, use_orientation_normalization = False):
+    
 
     assert landmarks.shape[0] == len(self._landmark_names), \
             'Unexpected number of landmarks: {}'.format(landmarks.shape[0])
@@ -25,14 +26,18 @@ class FeatureVectorEmbedder(object):
 
     # Normalize landmarks.
     landmarks = self._normalize_pose_landmarks(landmarks)
+    if(use_orientation_normalization==True):
+      # This normalizes using the angle between shoulder and hip centres, 
+      # thus less effective in bent body positions.  
+      rotated_landmarks = self._normalize_pose_orientation(landmarks)
+      feature_vector = self._get_feature_vector(rotated_landmarks)
 
     # Get embedding.
     feature_vector = self._get_feature_vector(landmarks)
-
     return feature_vector
 
   def _normalize_pose_landmarks(self, landmarks):
-    """Normalizes landmarks translation and scale."""
+    # Normalizes landmarks translation, scale and orientation
     landmarks = np.copy(landmarks)
 
     # Normalize translation.
@@ -42,7 +47,7 @@ class FeatureVectorEmbedder(object):
     # Normalize scale.
     pose_size = self._get_pose_size(landmarks, self._torso_size_multiplier)
     landmarks /= pose_size
-    # Multiplication by 100 is not required, but makes it eaasier to debug.
+    # Multiplication by 100 is not required, but makes it easier to debug.
     landmarks *= 100
 
     return landmarks
@@ -61,6 +66,7 @@ class FeatureVectorEmbedder(object):
       * Torso size multiplied by `torso_size_multiplier`
       * Maximum distance from pose center to any pose landmark
     """
+    landmarks = np.copy(landmarks)
     # This approach uses only 2D landmarks to compute pose size.
     landmarks = landmarks[:, :2]
 
@@ -94,4 +100,36 @@ class FeatureVectorEmbedder(object):
     return max(torso_size * torso_size_multiplier, max_dist)
 
 
-        
+  def _normalize_pose_orientation(self, landmarks):
+  
+    left_shoulder = landmarks[self._landmark_names.index('left_shoulder')]
+    right_shoulder = landmarks[self._landmark_names.index('right_shoulder')]
+    left_hip = landmarks[self._landmark_names.index('left_hip')]
+    right_hip = landmarks[self._landmark_names.index('right_hip')]
+
+    # Calculate the vector representing the line connecting shoulder and hip centers
+    shoulder_to_hip_vector = (right_hip - left_shoulder)
+
+    # Calculate the angle of the shoulder-hip line
+    angle_x = np.arctan2(shoulder_to_hip_vector[1], shoulder_to_hip_vector[2])
+    angle_y = np.arctan2(shoulder_to_hip_vector[0], shoulder_to_hip_vector[2])
+    angle_z = np.arctan2(shoulder_to_hip_vector[0], shoulder_to_hip_vector[1])
+
+    # Apply the rotation to normalize the pose landmarks for orientation
+    rotated_landmarks = np.copy(landmarks)
+    cos_x = np.cos(-angle_x)
+    sin_x = np.sin(-angle_x)
+    cos_y = np.cos(-angle_y)
+    sin_y = np.sin(-angle_y)
+    cos_z = np.cos(-angle_z)
+    sin_z = np.sin(-angle_z)
+    for i in range(len(rotated_landmarks)):
+        x = landmarks[i][0] - left_shoulder[0]
+        y = landmarks[i][1] - left_shoulder[1]
+        z = landmarks[i][2] - left_shoulder[2]
+        rotated_landmarks[i][0] = x * cos_y * cos_z - y * cos_x * sin_z + z * sin_x * sin_y
+        rotated_landmarks[i][1] = x * sin_z + y * cos_x * cos_z + z * cos_y * sin_x
+        rotated_landmarks[i][2] = -x * cos_z * sin_y - y * cos_y * sin_x + z * cos_x * cos_y
+
+    return rotated_landmarks
+
