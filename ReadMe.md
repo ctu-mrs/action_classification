@@ -1,3 +1,4 @@
+# Test the Normalization
 # How to proceed
 
 ## Paper 1: Using Autoencoders
