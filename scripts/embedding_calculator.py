@@ -27,4 +27,9 @@ class EmbeddingCalculator(object):
         ), "Unexpected number of landmarks: {}".format(normalized_landmarks.shape[0])
         # Get pose landmarks.
         landmarks = np.copy(normalized_landmarks)
-        return
+        embedding = self._get_pose_embedding(landmarks)
+        return embedding
+
+    def _get_pose_embedding(self, landmarks):
+        embedding = np.empty()
+        return embedding
