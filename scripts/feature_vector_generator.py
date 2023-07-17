@@ -2,6 +2,7 @@
 import numpy as np
 import math
 from scipy.spatial import procrustes
+from embedding_calculator import EmbeddingCalculator
 
 
 class FeatureVectorEmbedder(object):
@@ -34,7 +35,7 @@ class FeatureVectorEmbedder(object):
         ), "Unexpected number of landmarks: {}".format(landmarks.shape[0])
         # Get pose landmarks.
         landmarks = np.copy(landmarks)
-
+        embedder = EmbeddingCalculator()
         # Normalize landmarks.
         landmarks = self._normalize_pose_landmarks(landmarks)
         if use_orientation_normalization == True:
@@ -43,11 +44,11 @@ class FeatureVectorEmbedder(object):
             # rotated_landmarks = self._normalize_pose_orientation(landmarks)
             rotated_landmarks = self._normalize_pose_orientation_procrustes(landmarks)
 
-            feature_vector = self._get_feature_vector(rotated_landmarks)
+            feature_vector = embedder(rotated_landmarks)
             return feature_vector
 
         # Get embedding.
-        feature_vector = self._get_feature_vector(landmarks)
+        feature_vector = embedder(landmarks)
         return feature_vector
 
     def _normalize_pose_landmarks(self, landmarks):
