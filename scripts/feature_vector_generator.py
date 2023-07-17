@@ -23,7 +23,12 @@ class FeatureVectorEmbedder(object):
             "right_heel",
         ]
 
-    def __call__(self, landmarks, use_orientation_normalization=False):
+    def __call__(
+        self,
+        landmarks,
+        use_orientation_normalization=False,
+        use_procrustes_normalization=False,
+    ):
         assert landmarks.shape[0] == len(
             self._landmark_names
         ), "Unexpected number of landmarks: {}".format(landmarks.shape[0])
@@ -35,7 +40,9 @@ class FeatureVectorEmbedder(object):
         if use_orientation_normalization == True:
             # This normalizes using the angle between shoulder and hip centres,
             # thus less effective in bent body positions.
-            rotated_landmarks = self._normalize_pose_orientation(landmarks)
+            # rotated_landmarks = self._normalize_pose_orientation(landmarks)
+            rotated_landmarks = self._normalize_pose_orientation_procrustes(landmarks)
+
             feature_vector = self._get_feature_vector(rotated_landmarks)
             return feature_vector
 
@@ -142,5 +149,27 @@ class FeatureVectorEmbedder(object):
                 + y * (cos_x * cos_z + sin_x * sin_y * sin_z)
                 - z * (sin_x * cos_z - cos_x * sin_y * sin_z)
             )
+
+        return rotated_landmarks
+
+    def _normalize_pose_orientation_procrustes(self, landmarks):
+        left_shoulder = landmarks[self._landmark_names.index("left_shoulder")]
+        right_shoulder = landmarks[self._landmark_names.index("right_shoulder")]
+        left_hip = landmarks[self._landmark_names.index("left_hip")]
+        right_hip = landmarks[self._landmark_names.index("right_hip")]
+
+        # Calculate the vector representing the line connecting shoulder and hip centers
+        shoulder_to_hip_vector = right_hip - left_shoulder
+
+        # Set the target direction for upright posture
+        target_direction = np.array([0, 1, 0])  # [X, Y, Z] = [0, 1, 0] (upright)
+
+        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction
+        rotation_quat = procrustes(shoulder_to_hip_vector, target_direction)[0]
+
+        # Apply the rotation to normalize the pose landmarks for orientation
+        rotated_landmarks = np.copy(landmarks)
+        for i in range(len(rotated_landmarks)):
+            rotated_landmarks[i] = rotation_quat.apply(rotated_landmarks[i])
 
         return rotated_landmarks
