@@ -36,13 +36,12 @@ class FeatureVectorEmbedder(object):
             # This normalizes using the angle between shoulder and hip centres,
             # thus less effective in bent body positions.
             rotated_landmarks = self._normalize_pose_orientation(landmarks)
-            # feature_vector = self._get_feature_vector(rotated_landmarks)
-            return rotated_landmarks
+            feature_vector = self._get_feature_vector(rotated_landmarks)
+            return feature_vector
 
         # Get embedding.
-        # feature_vector = self._get_feature_vector(landmarks)
-        # return feature_vector
-        return landmarks
+        feature_vector = self._get_feature_vector(landmarks)
+        return feature_vector
 
     def _normalize_pose_landmarks(self, landmarks):
         # Normalizes landmarks translation, scale and orientation

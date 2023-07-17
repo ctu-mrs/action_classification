@@ -16,8 +16,8 @@ sample_landmarks = np.array(
         [7.5, 15.0, -7.5],  # right_shoulder
         [-15.0, 30.0, -15.0],  # left_elbow
         [15.0, 30.0, -7.5],  # right_elbow
-        [-20.0, 45.0, -15.0],  # left_wrist
-        [20.0, 45.0, -7.5],  # right_wrist
+        [-20.0, 45.0, -35.0],  # left_wrist
+        [20.0, 45.0, -25.5],  # right_wrist
         [-7.5, 60.0, -15.0],  # left_hip
         [7.5, 60.0, -15.0],  # right_hip
         [-7.5, 90.0, -30.5],  # left_knee
