@@ -133,11 +133,15 @@ class FeatureVectorEmbedder(object):
             y = landmarks[i][1] - left_shoulder[1]
             z = landmarks[i][2] - left_shoulder[2]
             rotated_landmarks[i][0] = (
-                x * cos_y * cos_z - y * cos_x * sin_z + z * sin_x * sin_y
+                x * cos_y * cos_z
+                - y * (cos_x * sin_z - sin_x * sin_y * cos_z)
+                + z * (sin_x * sin_z + cos_x * sin_y * cos_z)
             )
-            rotated_landmarks[i][1] = x * sin_z + y * cos_x * cos_z + z * cos_y * sin_x
+            rotated_landmarks[i][1] = x * sin_y + y * cos_x * cos_y + z * sin_x * cos_y
             rotated_landmarks[i][2] = (
-                -x * cos_z * sin_y - y * cos_y * sin_x + z * cos_x * cos_y
+                -x * cos_y * sin_z
+                + y * (cos_x * cos_z + sin_x * sin_y * sin_z)
+                - z * (sin_x * cos_z - cos_x * sin_y * sin_z)
             )
 
         return rotated_landmarks
