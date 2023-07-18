@@ -4,6 +4,17 @@ import math
 from scipy.spatial import procrustes
 from embedding_calculator import EmbeddingCalculator
 
+# landmark structure
+# Header header
+#     uint32 seq
+#     time stamp
+#     string frame_id
+# string[] name
+# float32[] x
+# float32[] y
+# float32[] z
+# float32[] vis
+
 
 class FeatureVectorEmbedder(object):
     def __init__(self, torso_size_multiplier=2.5):
