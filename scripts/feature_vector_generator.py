@@ -4,17 +4,6 @@ import math
 from scipy.spatial import procrustes
 from embedding_calculator import EmbeddingCalculator
 
-# landmark structure
-# Header header
-#     uint32 seq
-#     time stamp
-#     string frame_id
-# string[] name
-# float32[] x
-# float32[] y
-# float32[] z
-# float32[] vis
-
 
 class FeatureVectorEmbedder(object):
     def __init__(self, torso_size_multiplier=2.5):
@@ -38,8 +27,9 @@ class FeatureVectorEmbedder(object):
     def __call__(
         self,
         landmarks,
-        use_orientation_normalization=False,
-        use_procrustes_normalization=False,
+        time_stamp,
+        use_orientation_normalization=True,
+        use_procrustes_normalization=True,
     ):
         assert landmarks.shape[0] == len(
             self._landmark_names
@@ -59,7 +49,7 @@ class FeatureVectorEmbedder(object):
             return feature_vector
 
         # Get embedding.
-        feature_vector = embedder(landmarks)
+        feature_vector = embedder(landmarks, time_stamp)
         return feature_vector
 
     def _normalize_pose_landmarks(self, landmarks):
