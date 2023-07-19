@@ -5,10 +5,33 @@ import math
 
 class LandmarkFeatureInitializer(object):
     def __init__(self, *landmark_names):
-        self.landmark_names = landmark_names
+        self.incoming_landmark_names = landmark_names
         _number_of_landmarks = len(self.landmark_names)
+
+        self._landmark_names = [
+            "nose",
+            "left_shoulder",
+            "right_shoulder",
+            "left_elbow",
+            "right_elbow",
+            "left_wrist",
+            "right_wrist",
+            "left_hip",
+            "right_hip",
+            "left_knee",
+            "right_knee",
+            "left_heel",
+            "right_heel",
+        ]
+        for item in self.incoming_landmark_names:
+            if item not in self._landmark_names:
+                return ValueError(
+                    "Incorrect landmark name arguement to the Landmark Feature Initializer"
+                )
         if _number_of_landmarks == 0:
-            raise ValueError("Not Enough Arguements to the Landmark Datatype")
+            raise ValueError(
+                "Not Enough Arguements to the Landmark Feature Initializer"
+            )
 
         elif _number_of_landmarks == 1:
             self.previous_joint_vector = np.array([0, 0, 0], dtype=np.float32)
@@ -48,4 +71,4 @@ class LandmarkFeatureInitializer(object):
             self.tri_joint_angular_acc = np.array([0, 0, 0], dtype=np.float32)
 
         else:
-            raise ValueError("Too Many Arguements to the Landmark Datatype")
+            raise ValueError("Too Many Arguements to the Landmark Feature Initializer")
