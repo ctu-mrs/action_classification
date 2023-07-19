@@ -440,6 +440,44 @@ class EmbeddingCalculator(object):
         ) / (self._current_time_stamp - self._previous_time_stamp)
         return joint_pair_angular_acc
 
+    def _get_tri_joint_angle(self, landmarks, tri_joint_object):
+        # Takes three points a,b,c and returns the product of the unit cross product of vectors ab and bc and the angle between them.
+        vector_ab = self._get_distance_by_names(
+            landmarks,
+            tri_joint_object.landmark_names[0],
+            tri_joint_object.landmark_names[1],
+        )
+        vector_bc = self._get_distance_by_names(
+            landmarks,
+            tri_joint_object.landmark_names[1],
+            tri_joint_object.landmark_names[2],
+        )
+
+        # Calculate the unit cross product of vectors ab and bc
+        cross_product = np.cross(vector_ab, vector_bc)
+        unit_cross_product /= np.linalg.norm(cross_product)
+
+        # Calculate the angle between vectors ab and bc
+        angle = self._get_angle(vector_ab, vector_bc)
+
+        # Calculate the tri_joint_angle as the product of the unit cross product and the angle
+        tri_joint_object.tri_joint_angle = angle * unit_cross_product
+
+        return tri_joint_object.tri_joint_angle
+
+    def _get_tri_joint_angular_vel(self, landmarks, tri_joint_object):
+        tri_joint_angular_vel = (
+            tri_joint_object.tri_joint_angle - tri_joint_object.previous_tri_joint_angle
+        ) / (self._current_time_stamp - self._previous_time_stamp)
+        return tri_joint_angular_vel
+
+    def _get_tri_joint_angular_acc(self, landmarks, tri_joint_object):
+        tri_joint_angular_acc = (
+            tri_joint_object.tri_joint_angular_vel
+            - tri_joint_object.previous_tri_joint_angular_vel
+        ) / (self._current_time_stamp - self._previous_time_stamp)
+        return tri_joint_angular_acc
+
     def _get_average_by_names(self, landmarks, name_from, name_to):
         lmk_from = landmarks[self._landmark_names.index(name_from)]
         lmk_to = landmarks[self._landmark_names.index(name_to)]
