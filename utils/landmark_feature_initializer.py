@@ -25,13 +25,11 @@ class LandmarkFeatureInitializer(object):
         ]
         for item in self.incoming_landmark_names:
             if item not in self._landmark_names:
-                return ValueError(
-                    "Incorrect landmark name arguement to the Landmark Feature Initializer"
+                raise ValueError(
+                    "Incorrect landmark name arguments to the Landmark Feature Initializer"
                 )
         if _number_of_landmarks == 0:
-            raise ValueError(
-                "Not Enough Arguements to the Landmark Feature Initializer"
-            )
+            raise ValueError("Not Enough Arguments to the Landmark Feature Initializer")
 
         elif _number_of_landmarks == 1:
             self.previous_joint_vector = np.array([0, 0, 0], dtype=np.float32)
@@ -71,4 +69,4 @@ class LandmarkFeatureInitializer(object):
             self.tri_joint_angular_acc = np.array([0, 0, 0], dtype=np.float32)
 
         else:
-            raise ValueError("Too Many Arguements to the Landmark Feature Initializer")
+            raise ValueError("Too Many Arguments to the Landmark Feature Initializer")
