@@ -449,6 +449,38 @@ class EmbeddingCalculator(object):
 
     def set_all_previous_variables(self):
         self._previous_time_stamp = self._current_time_stamp
+        for single_joint_object in self._all_single_joints.values():
+            single_joint_object.previous_joint_vector = single_joint_object.joint_vector
+
+            single_joint_object.previous_joint_vel = single_joint_object.joint_vel
+            single_joint_object.previous_joint_vector_angle = (
+                single_joint_object.joint_vector_angle
+            )
+
+            single_joint_object.previous_joint_angular_vel = (
+                single_joint_object.joint_angular_vel
+            )
+
+        for pair_joint_object in self._all_pair_joints.values():
+            pair_joint_object.previous_joint_pair_vector = (
+                pair_joint_object.joint_pair_vector
+            )
+
+            pair_joint_object.previous_joint_pair_vel = pair_joint_object.joint_pair_vel
+            pair_joint_object.previous_joint_pair_vector_angle = (
+                pair_joint_object.joint_pair_vector_angle
+            )
+
+            pair_joint_object.previous_joint_pair_angular_vel = (
+                pair_joint_object.joint_pair_angular_vel
+            )
+
+        for tri_joint_object in self._all_tri_joints.values():
+            tri_joint_object.previous_tri_joint_angle = tri_joint_object.tri_joint_angle
+
+            tri_joint_object.previous_tri_joint_angular_vel = (
+                tri_joint_object.tri_joint_angular_vel
+            )
 
     def _perform_single_joint_operations(self, landmarks, single_joint_object):
         # Return a list of all the single joint operations
