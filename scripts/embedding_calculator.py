@@ -52,174 +52,175 @@ class EmbeddingCalculator(object):
         ]
         self._previous_time_stamp = 0.0
         self._current_time_stamp = 0.0
+        self._all_single_joints = {
+            # Single Joint Objects
+            "single_nose_object": LandmarkFeatureInitializer("nose"),
+            "single_lshoulder_object": LandmarkFeatureInitializer("left_shoulder"),
+            "single_rshoulder_object": LandmarkFeatureInitializer("right_shoulder"),
+            "single_lelbow_object": LandmarkFeatureInitializer("left_elbow"),
+            "single_relbow_object": LandmarkFeatureInitializer("right_elbow"),
+            "single_lwrist_object": LandmarkFeatureInitializer("left_wrist"),
+            "single_rwrist_object": LandmarkFeatureInitializer("right_wrist"),
+            "single_lknee_object": LandmarkFeatureInitializer("left_knee"),
+            "single_rknee_object": LandmarkFeatureInitializer("right_knee"),
+            "single_lheel_object": LandmarkFeatureInitializer("left_heel"),
+            "single_rheel_object": LandmarkFeatureInitializer("right_heel"),
+        }
+        self._all_pair_joints = {
+            # Joint Pairs
+            ## One Joint
+            "pair_lshoulder_lelbow_object": LandmarkFeatureInitializer(
+                "left_shoulder", "left_elbow"
+            ),
+            "pair_rshoulder_relbow_object": LandmarkFeatureInitializer(
+                "right_shoulder", "right_elbow"
+            ),
+            "pair_lelbow_lwrist_object": LandmarkFeatureInitializer(
+                "left_elbow", "left_wrist"
+            ),
+            "pair_relbow_rwrist_object": LandmarkFeatureInitializer(
+                "right_elbow", "right_wrist"
+            ),
+            "pair_lhip_lknee_object": LandmarkFeatureInitializer(
+                "left_hip", "left_knee"
+            ),
+            "pair_rhip_rknee_object": LandmarkFeatureInitializer(
+                "right_hip", "right_knee"
+            ),
+            "pair_lknee_lheel_object": LandmarkFeatureInitializer(
+                "left_knee", "left_heel"
+            ),
+            "pair_rknee_rheel_object": LandmarkFeatureInitializer(
+                "right_knee", "right_heel"
+            ),
+            ## Two Joints
+            "pair_lshoulder_lwrist_object": LandmarkFeatureInitializer(
+                "left_shoulder", "left_wrist"
+            ),
+            "pair_rshoulder_rwrist_object": LandmarkFeatureInitializer(
+                "right_shoulder", "right_wrist"
+            ),
+            "pair_lhip_lheel_object": LandmarkFeatureInitializer(
+                "left_hip", "left_heel"
+            ),
+            "pair_rhip_rheel_object": LandmarkFeatureInitializer(
+                "right_hip", "right_heel"
+            ),
+            ## Three Joints
+            "pair_lshoulder_lheel_object": LandmarkFeatureInitializer(
+                "left_shoulder", "left_heel"
+            ),
+            "pair_rshoulder_rheel_object": LandmarkFeatureInitializer(
+                "right_shoulder", "right_heel"
+            ),
+            "pair_lhip_lwrist_object": LandmarkFeatureInitializer(
+                "left_hip", "left_wrist"
+            ),
+            "pair_rhip_rwrist_object": LandmarkFeatureInitializer(
+                "right_hip", "right_wrist"
+            ),
+            "pair_lelbow_lknee_object": LandmarkFeatureInitializer(
+                "left_elbow", "left_knee"
+            ),
+            "pair_relbow_rknee_object": LandmarkFeatureInitializer(
+                "right_elbow", "right_knee"
+            ),
+            ## Cross Body
+            "pair_lelbow_relbow_object": LandmarkFeatureInitializer(
+                "left_elbow", "right_elbow"
+            ),
+            "pair_lwrist_rwrist_object": LandmarkFeatureInitializer(
+                "left_wrist", "right_wrist"
+            ),
+            "pair_lknee_rknee_object": LandmarkFeatureInitializer(
+                "left_knee", "right_knee"
+            ),
+            "pair_lheel_rheel_object": LandmarkFeatureInitializer(
+                "left_heel", "right_heel"
+            ),
+            "pair_lwrist_rheel_object": LandmarkFeatureInitializer(
+                "left_wrist", "right_heel"
+            ),
+            "pair_lheel_rwrist_object": LandmarkFeatureInitializer(
+                "left_heel", "right_wrist"
+            ),
+            "pair_lwrist_rknee_object": LandmarkFeatureInitializer(
+                "left_wrist", "right_knee"
+            ),
+            "pair_lknee_rwrist_object": LandmarkFeatureInitializer(
+                "left_knee", "right_wrist"
+            ),
+            "pair_lknee_rheel_object": LandmarkFeatureInitializer(
+                "left_knee", "right_heel"
+            ),
+            "pair_lheel_rknee_object": LandmarkFeatureInitializer(
+                "left_heel", "right_knee"
+            ),
+            "pair_lwrist_relbow_object": LandmarkFeatureInitializer(
+                "left_wrist", "right_elbow"
+            ),
+            "pair_lelbow_rwrist_object": LandmarkFeatureInitializer(
+                "left_elbow", "right_wrist"
+            ),
+            "pair_lknee_relbow_object": LandmarkFeatureInitializer(
+                "left_knee", "right_elbow"
+            ),
+            "pair_lelbow_rknee_object": LandmarkFeatureInitializer(
+                "left_elbow", "right_knee"
+            ),
+            "pair_lheel_relbow_object": LandmarkFeatureInitializer(
+                "left_heel", "right_elbow"
+            ),
+            "pair_lelbow_rheel_object": LandmarkFeatureInitializer(
+                "left_elbow", "right_heel"
+            ),
+            "pair_lshoulder_rknee_object": LandmarkFeatureInitializer(
+                "left_shoulder", "right_knee"
+            ),
+            "pair_lknee_rshoulder_object": LandmarkFeatureInitializer(
+                "left_knee", "right_shoulder"
+            ),
+            "pair_lshoulder_rheel_object": LandmarkFeatureInitializer(
+                "left_shoulder", "right_heel"
+            ),
+            "pair_lheel_rshoulder_object": LandmarkFeatureInitializer(
+                "left_heel", "right_shoulder"
+            ),
+            "pair_lhip_rwrists_object": LandmarkFeatureInitializer(
+                "left_hip", "right_wrist"
+            ),
+            "pair_lwrists_rhip_object": LandmarkFeatureInitializer(
+                "left_wrist", "right_hip"
+            ),
+        }
 
-        # Single Joint Objects
-        self.single_nose_object = LandmarkFeatureInitializer("nose")
-        self.single_lshoulder_object = LandmarkFeatureInitializer("left_shoulder")
-        self.single_rshoulder_object = LandmarkFeatureInitializer("right_shoulder")
-        self.single_lelbow_object = LandmarkFeatureInitializer("left_elbow")
-        self.single_relbow_object = LandmarkFeatureInitializer("right_elbow")
-        self.single_lwrist_object = LandmarkFeatureInitializer("left_wrist")
-        self.single_rwrist_object = LandmarkFeatureInitializer("right_wrist")
-        self.single_lknee_object = LandmarkFeatureInitializer("left_knee")
-        self.single_rknee_object = LandmarkFeatureInitializer("right_knee")
-        self.single_lheel_object = LandmarkFeatureInitializer("left_heel")
-        self.single_rheel_object = LandmarkFeatureInitializer("right_heel")
-
-        # Joint Pairs
-        ## One Joint
-        self.pair_lshoulder_lelbow_object = LandmarkFeatureInitializer(
-            "left_shoulder", "left_elbow"
-        )
-        self.pair_rshoulder_relbow_object = LandmarkFeatureInitializer(
-            "right_shoulder", "right_elbow"
-        )
-        self.pair_lelbow_lwrist_object = LandmarkFeatureInitializer(
-            "left_elbow", "left_wrist"
-        )
-        self.pair_relbow_rwrist_object = LandmarkFeatureInitializer(
-            "right_elbow", "right_wrist"
-        )
-        self.pair_lhip_lknee_object = LandmarkFeatureInitializer(
-            "left_hip", "left_knee"
-        )
-        self.pair_rhip_rknee_object = LandmarkFeatureInitializer(
-            "right_hip", "right_knee"
-        )
-        self.pair_lknee_lheel_object = LandmarkFeatureInitializer(
-            "left_knee", "left_heel"
-        )
-        self.pair_rknee_rheel_object = LandmarkFeatureInitializer(
-            "right_knee", "right_heel"
-        )
-
-        ## Two Joints
-        self.pair_lshoulder_lwrist_object = LandmarkFeatureInitializer(
-            "left_shoulder", "left_wrist"
-        )
-        self.pair_rshoulder_rwrist_object = LandmarkFeatureInitializer(
-            "right_shoulder", "right_wrist"
-        )
-        self.pair_lhip_lheel_object = LandmarkFeatureInitializer(
-            "left_hip", "left_heel"
-        )
-        self.pair_rhip_rheel_object = LandmarkFeatureInitializer(
-            "right_hip", "right_heel"
-        )
-
-        ## Three Joints
-        self.pair_lshoulder_lheel_object = LandmarkFeatureInitializer(
-            "left_shoulder", "left_heel"
-        )
-        self.pair_rshoulder_rheel_object = LandmarkFeatureInitializer(
-            "right_shoulder", "right_heel"
-        )
-        self.pair_lhip_lwrist_object = LandmarkFeatureInitializer(
-            "left_hip", "left_wrist"
-        )
-        self.pair_rhip_rwrist_object = LandmarkFeatureInitializer(
-            "right_hip", "right_wrist"
-        )
-        self.pair_lelbow_lknee_object = LandmarkFeatureInitializer(
-            "left_elbow", "left_knee"
-        )
-        self.pair_relbow_rknee_object = LandmarkFeatureInitializer(
-            "right_elbow", "right_knee"
-        )
-
-        ## Cross Body
-        self.pair_lelbow_relbow_object = LandmarkFeatureInitializer(
-            "left_elbow", "right_elbow"
-        )
-        self.pair_lwrist_rwrist_object = LandmarkFeatureInitializer(
-            "left_wrist", "right_wrist"
-        )
-        self.pair_lknee_rknee_object = LandmarkFeatureInitializer(
-            "left_knee", "right_knee"
-        )
-        self.pair_lheel_rheel_object = LandmarkFeatureInitializer(
-            "left_heel", "right_heel"
-        )
-        self.pair_lwrist_rheel_object = LandmarkFeatureInitializer(
-            "left_wrist", "right_heel"
-        )
-        self.pair_lheel_rwrist_object = LandmarkFeatureInitializer(
-            "left_heel", "right_wrist"
-        )
-        self.pair_lwrist_rknee_object = LandmarkFeatureInitializer(
-            "left_wrist", "right_knee"
-        )
-        self.pair_lknee_rwrist_object = LandmarkFeatureInitializer(
-            "left_knee", "right_wrist"
-        )
-        self.pair_lknee_rheel_object = LandmarkFeatureInitializer(
-            "left_knee", "right_heel"
-        )
-        self.pair_lheel_rknee_object = LandmarkFeatureInitializer(
-            "left_heel", "right_knee"
-        )
-        self.pair_lwrist_relbow_object = LandmarkFeatureInitializer(
-            "left_wrist", "right_elbow"
-        )
-        self.pair_lelbow_rwrist_object = LandmarkFeatureInitializer(
-            "left_elbow", "right_wrist"
-        )
-        self.pair_lknee_relbow_object = LandmarkFeatureInitializer(
-            "left_knee", "right_elbow"
-        )
-        self.pair_lelbow_rknee_object = LandmarkFeatureInitializer(
-            "left_elbow", "right_knee"
-        )
-        self.pair_lheel_relbow_object = LandmarkFeatureInitializer(
-            "left_heel", "right_elbow"
-        )
-        self.pair_lelbow_rheel_object = LandmarkFeatureInitializer(
-            "left_elbow", "right_heel"
-        )
-        self.pair_lshoulder_rknee_object = LandmarkFeatureInitializer(
-            "left_shoulder", "right_knee"
-        )
-        self.pair_lknee_rshoulder_object = LandmarkFeatureInitializer(
-            "left_knee", "right_shoulder"
-        )
-        self.pair_lshoulder_rheel_object = LandmarkFeatureInitializer(
-            "left_shoulder", "right_heel"
-        )
-        self.pair_lheel_rshoulder_object = LandmarkFeatureInitializer(
-            "left_heel", "right_shoulder"
-        )
-        self.pair_lhip_rwrists_object = LandmarkFeatureInitializer(
-            "left_hip", "right_wrist"
-        )
-        self.pair_lwrists_rhip_object = LandmarkFeatureInitializer(
-            "left_wrist", "right_hip"
-        )
-
-        # Tri Joints
-        self.tri_lshoulder_lelbow_lwrist_object = LandmarkFeatureInitializer(
-            "left_shoulder", "left_elbow", "left_wrist"
-        )
-        self.tri_rshoulder_relbow_rwrist_object = LandmarkFeatureInitializer(
-            "right_shoulder", "right_elbow", "right_wrist"
-        )
-        self.tri_lhip_lknee_lheel_object = LandmarkFeatureInitializer(
-            "left_hip", "left_knee", "left_heel"
-        )
-        self.tri_rhip_rknee_rheel_object = LandmarkFeatureInitializer(
-            "right_hip", "right_knee", "right_heel"
-        )
-        self.tri_lshoulder_lhip_lknee_object = LandmarkFeatureInitializer(
-            "left_shoulder", "left_hip", "left_knee"
-        )
-        self.tri_rshoulder_rhip_rknee_object = LandmarkFeatureInitializer(
-            "right_shoulder", "right_hip", "right_knee"
-        )
-        self.tri_lelbow_lshoulder_lhip_object = LandmarkFeatureInitializer(
-            "left_elbow", "left_shoulder", "left_hip"
-        )
-        self.tri_relbow_rshoulder_rhip_object = LandmarkFeatureInitializer(
-            "right_elbow", "right_shoulder", "right_hip"
-        )
+        self._all_tri_joints = {
+            # Tri Joints
+            "tri_lshoulder_lelbow_lwrist_object": LandmarkFeatureInitializer(
+                "left_shoulder", "left_elbow", "left_wrist"
+            ),
+            "tri_rshoulder_relbow_rwrist_object": LandmarkFeatureInitializer(
+                "right_shoulder", "right_elbow", "right_wrist"
+            ),
+            "tri_lhip_lknee_lheel_object": LandmarkFeatureInitializer(
+                "left_hip", "left_knee", "left_heel"
+            ),
+            "tri_rhip_rknee_rheel_object": LandmarkFeatureInitializer(
+                "right_hip", "right_knee", "right_heel"
+            ),
+            "tri_lshoulder_lhip_lknee_object": LandmarkFeatureInitializer(
+                "left_shoulder", "left_hip", "left_knee"
+            ),
+            "tri_rshoulder_rhip_rknee_object": LandmarkFeatureInitializer(
+                "right_shoulder", "right_hip", "right_knee"
+            ),
+            "tri_lelbow_lshoulder_lhip_object": LandmarkFeatureInitializer(
+                "left_elbow", "left_shoulder", "left_hip"
+            ),
+            "tri_relbow_rshoulder_rhip_object": LandmarkFeatureInitializer(
+                "right_elbow", "right_shoulder", "right_hip"
+            ),
+        }
 
     def __call__(
         self,
@@ -255,134 +256,32 @@ class EmbeddingCalculator(object):
         return embedding
 
     def _get_pose_embedding(self, landmarks):
+        all_single_joint_features = []
+
+        for single_joint_object in self._all_single_joints.items():
+            all_single_joint_features = (
+                all_single_joint_features
+                + self._perform_single_joint_operations(landmarks, single_joint_object)
+            )
+
+        all_pair_joint_features = []
+        for pair_joint_object in self._all_pair_joints.values():
+            all_pair_joint_features = (
+                all_pair_joint_features
+                + self._perform_joint_pair_operations(landmarks, pair_joint_object)
+            )
+
+        all_tri_joint_features = []
+        for tri_joint_object in self._all_tri_joints.values():
+            all_tri_joint_features = (
+                all_tri_joint_features
+                + self._perform_tri_joint_operations(landmarks, tri_joint_object)
+            )
+
         embedding = np.array(
-            [
-                self._get_joint_vector(landmarks, self.single_nose_object),
-                self._get_joint_vector(landmarks, self.single_lshoulder_object),
-                self._get_joint_vector(landmarks, self.single_rshoulder_object),
-                self._get_joint_vector(landmarks, self.single_lelbow_object),
-                self._get_joint_vector(landmarks, self.single_relbow_object),
-                self._get_joint_vector(landmarks, self.single_lwrist_object),
-                self._get_joint_vector(landmarks, self.single_rwrist_object),
-                self._get_joint_vector(landmarks, self.single_lknee_object),
-                self._get_joint_vector(landmarks, self.single_rknee_object),
-                self._get_joint_vector(landmarks, self.single_lheel_object),
-                self._get_joint_vector(landmarks, self.single_rheel_object),
-                self._get_joint_vel(landmarks, self.single_nose_object),
-                self._get_joint_vel(landmarks, self.single_lshoulder_object),
-                self._get_joint_vel(landmarks, self.single_rshoulder_object),
-                self._get_joint_vel(landmarks, self.single_lelbow_object),
-                self._get_joint_vel(landmarks, self.single_relbow_object),
-                self._get_joint_vel(landmarks, self.single_lwrist_object),
-                self._get_joint_vel(landmarks, self.single_rwrist_object),
-                self._get_joint_vel(landmarks, self.single_lknee_object),
-                self._get_joint_vel(landmarks, self.single_rknee_object),
-                self._get_joint_vel(landmarks, self.single_lheel_object),
-                self._get_joint_vel(landmarks, self.single_rheel_object),
-                # Get the joint accelarations
-                self._get_joint_acc(landmarks, self.single_nose_object),
-                self._get_joint_acc(landmarks, self.single_lshoulder_object),
-                self._get_joint_acc(landmarks, self.single_rshoulder_object),
-                self._get_joint_acc(landmarks, self.single_lelbow_object),
-                self._get_joint_acc(landmarks, self.single_relbow_object),
-                self._get_joint_acc(landmarks, self.single_lwrist_object),
-                self._get_joint_acc(landmarks, self.single_rwrist_object),
-                self._get_joint_acc(landmarks, self.single_lknee_object),
-                self._get_joint_acc(landmarks, self.single_rknee_object),
-                self._get_joint_acc(landmarks, self.single_lheel_object),
-                self._get_joint_acc(landmarks, self.single_rheel_object),
-                # Get joint vector's angle about the origin
-                self._get_joint_vector_angle(landmarks, self.single_nose_object),
-                self._get_joint_vector_angle(landmarks, self.single_lshoulder_object),
-                self._get_joint_vector_angle(landmarks, self.single_rshoulder_object),
-                self._get_joint_vector_angle(landmarks, self.single_lelbow_object),
-                self._get_joint_vector_angle(landmarks, self.single_relbow_object),
-                self._get_joint_vector_angle(landmarks, self.single_lwrist_object),
-                self._get_joint_vector_angle(landmarks, self.single_rwrist_object),
-                self._get_joint_vector_angle(landmarks, self.single_lknee_object),
-                self._get_joint_vector_angle(landmarks, self.single_rknee_object),
-                self._get_joint_vector_angle(landmarks, self.single_lheel_object),
-                self._get_joint_vector_angle(landmarks, self.single_rheel_object),
-                # Get joint vector's anglular velocity about the origin
-                self._get_joint_angular_vel(landmarks, self.single_nose_object),
-                self._get_joint_angular_vel(landmarks, self.single_lshoulder_object),
-                self._get_joint_angular_vel(landmarks, self.single_rshoulder_object),
-                self._get_joint_angular_vel(landmarks, self.single_lelbow_object),
-                self._get_joint_angular_vel(landmarks, self.single_relbow_object),
-                self._get_joint_angular_vel(landmarks, self.single_lwrist_object),
-                self._get_joint_angular_vel(landmarks, self.single_rwrist_object),
-                self._get_joint_angular_vel(landmarks, self.single_lknee_object),
-                self._get_joint_angular_vel(landmarks, self.single_rknee_object),
-                self._get_joint_angular_vel(landmarks, self.single_lheel_object),
-                self._get_joint_angular_vel(landmarks, self.single_rheel_object),
-                # Get joint vector's anglular velocity about the origin
-                self._get_joint_angular_acc(landmarks, self.single_nose_object),
-                self._get_joint_angular_acc(landmarks, self.single_lshoulder_object),
-                self._get_joint_angular_acc(landmarks, self.single_rshoulder_object),
-                self._get_joint_angular_acc(landmarks, self.single_lelbow_object),
-                self._get_joint_angular_acc(landmarks, self.single_relbow_object),
-                self._get_joint_angular_acc(landmarks, self.single_lwrist_object),
-                self._get_joint_angular_acc(landmarks, self.single_rwrist_object),
-                self._get_joint_angular_acc(landmarks, self.single_lknee_object),
-                self._get_joint_angular_acc(landmarks, self.single_rknee_object),
-                self._get_joint_angular_acc(landmarks, self.single_lheel_object),
-                self._get_joint_angular_acc(landmarks, self.single_rheel_object),
-                # Get the displacement vector of each relavant joint
-                self._get_displacement_vector(landmarks, self.single_nose_object),
-                self._get_displacement_vector(landmarks, self.single_lshoulder_object),
-                self._get_displacement_vector(landmarks, self.single_rshoulder_object),
-                self._get_displacement_vector(landmarks, self.single_lelbow_object),
-                self._get_displacement_vector(landmarks, self.single_relbow_object),
-                self._get_displacement_vector(landmarks, self.single_lwrist_object),
-                self._get_displacement_vector(landmarks, self.single_rwrist_object),
-                self._get_displacement_vector(landmarks, self.single_lknee_object),
-                self._get_displacement_vector(landmarks, self.single_rknee_object),
-                self._get_displacement_vector(landmarks, self.single_lheel_object),
-                self._get_displacement_vector(landmarks, self.single_rheel_object),
-                # Get the joint pair vectors
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_lshoulder_lelbow_object
-                ),
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_rshoulder_relbow_object
-                ),
-                self._get_joint_pair_vector(landmarks, self.pair_lelbow_lwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_relbow_rwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lhip_lknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_rhip_rknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lknee_lheel_object),
-                self._get_joint_pair_vector(landmarks, self.pair_rknee_rheel_object),
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_lshoulder_lwrist_object
-                ),
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_rshoulder_rwrist_object
-                ),
-                self._get_joint_pair_vector(landmarks, self.pair_lhip_lheel_object),
-                self._get_joint_pair_vector(landmarks, self.pair_rhip_rheel_object),
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_lshoulder_lheel_object
-                ),
-                self._get_joint_pair_vector(
-                    landmarks, self.pair_rshoulder_rheel_object
-                ),
-                self._get_joint_pair_vector(landmarks, self.pair_lhip_lwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_rhip_rwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lelbow_lknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_relbow_rknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lelbow_relbow_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lknee_rknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lheel_rheel_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rheel_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lheel_rwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lknee_rwrist_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lknee_rheel_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lheel_rknee_object),
-                self._get_joint_pair_vector(landmarks, self.pair_lwrist_relbow_object),
-            ]
+            all_single_joint_features + all_pair_joint_features + all_tri_joint_features
         )
+
         self.set_all_previous_variables()
         return embedding
 
