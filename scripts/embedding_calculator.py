@@ -52,6 +52,7 @@ class EmbeddingCalculator(object):
         ]
         self._previous_time_stamp = 0.0
         self._current_time_stamp = 0.0
+
         # Single Joint Objects
         self.single_nose_object = LandmarkFeatureInitializer("nose")
         self.single_lshoulder_object = LandmarkFeatureInitializer("left_shoulder")
@@ -247,6 +248,7 @@ class EmbeddingCalculator(object):
             self._landmark_names
         ), "Unexpected number of landmarks: {}".format(normalized_landmarks.shape[0])
         self._current_time_stamp = time_stamp
+        self._feature_list = feature_list
         # Get pose landmarks.
         landmarks = np.copy(normalized_landmarks)
         embedding = self._get_pose_embedding(landmarks)
@@ -277,6 +279,7 @@ class EmbeddingCalculator(object):
                 self._get_joint_vel(landmarks, self.single_rknee_object),
                 self._get_joint_vel(landmarks, self.single_lheel_object),
                 self._get_joint_vel(landmarks, self.single_rheel_object),
+                # Get the joint accelarations
                 self._get_joint_acc(landmarks, self.single_nose_object),
                 self._get_joint_acc(landmarks, self.single_lshoulder_object),
                 self._get_joint_acc(landmarks, self.single_rshoulder_object),
@@ -288,6 +291,7 @@ class EmbeddingCalculator(object):
                 self._get_joint_acc(landmarks, self.single_rknee_object),
                 self._get_joint_acc(landmarks, self.single_lheel_object),
                 self._get_joint_acc(landmarks, self.single_rheel_object),
+                # Get joint vector's angle about the origin
                 self._get_joint_vector_angle(landmarks, self.single_nose_object),
                 self._get_joint_vector_angle(landmarks, self.single_lshoulder_object),
                 self._get_joint_vector_angle(landmarks, self.single_rshoulder_object),
@@ -299,6 +303,7 @@ class EmbeddingCalculator(object):
                 self._get_joint_vector_angle(landmarks, self.single_rknee_object),
                 self._get_joint_vector_angle(landmarks, self.single_lheel_object),
                 self._get_joint_vector_angle(landmarks, self.single_rheel_object),
+                # Get joint vector's anglular velocity about the origin
                 self._get_joint_angular_vel(landmarks, self.single_nose_object),
                 self._get_joint_angular_vel(landmarks, self.single_lshoulder_object),
                 self._get_joint_angular_vel(landmarks, self.single_rshoulder_object),
@@ -310,6 +315,7 @@ class EmbeddingCalculator(object):
                 self._get_joint_angular_vel(landmarks, self.single_rknee_object),
                 self._get_joint_angular_vel(landmarks, self.single_lheel_object),
                 self._get_joint_angular_vel(landmarks, self.single_rheel_object),
+                # Get joint vector's anglular velocity about the origin
                 self._get_joint_angular_acc(landmarks, self.single_nose_object),
                 self._get_joint_angular_acc(landmarks, self.single_lshoulder_object),
                 self._get_joint_angular_acc(landmarks, self.single_rshoulder_object),
@@ -321,6 +327,7 @@ class EmbeddingCalculator(object):
                 self._get_joint_angular_acc(landmarks, self.single_rknee_object),
                 self._get_joint_angular_acc(landmarks, self.single_lheel_object),
                 self._get_joint_angular_acc(landmarks, self.single_rheel_object),
+                # Get the displacement vector of each relavant joint
                 self._get_displacement_vector(landmarks, self.single_nose_object),
                 self._get_displacement_vector(landmarks, self.single_lshoulder_object),
                 self._get_displacement_vector(landmarks, self.single_rshoulder_object),
@@ -332,6 +339,48 @@ class EmbeddingCalculator(object):
                 self._get_displacement_vector(landmarks, self.single_rknee_object),
                 self._get_displacement_vector(landmarks, self.single_lheel_object),
                 self._get_displacement_vector(landmarks, self.single_rheel_object),
+                # Get the joint pair vectors
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_lshoulder_lelbow_object
+                ),
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_rshoulder_relbow_object
+                ),
+                self._get_joint_pair_vector(landmarks, self.pair_lelbow_lwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_relbow_rwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lhip_lknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_rhip_rknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lknee_lheel_object),
+                self._get_joint_pair_vector(landmarks, self.pair_rknee_rheel_object),
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_lshoulder_lwrist_object
+                ),
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_rshoulder_rwrist_object
+                ),
+                self._get_joint_pair_vector(landmarks, self.pair_lhip_lheel_object),
+                self._get_joint_pair_vector(landmarks, self.pair_rhip_rheel_object),
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_lshoulder_lheel_object
+                ),
+                self._get_joint_pair_vector(
+                    landmarks, self.pair_rshoulder_rheel_object
+                ),
+                self._get_joint_pair_vector(landmarks, self.pair_lhip_lwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_rhip_rwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lelbow_lknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_relbow_rknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lelbow_relbow_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lknee_rknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lheel_rheel_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rheel_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lheel_rwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lwrist_rknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lknee_rwrist_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lknee_rheel_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lheel_rknee_object),
+                self._get_joint_pair_vector(landmarks, self.pair_lwrist_relbow_object),
             ]
         )
         self.set_all_previous_variables()
@@ -501,3 +550,34 @@ class EmbeddingCalculator(object):
 
     def set_all_previous_variables(self):
         self._previous_time_stamp = self._current_time_stamp
+
+    def _perform_single_joint_operations(self, landmarks, single_joint_object):
+        # Return a list of all the single joint operations
+        return [
+            self._get_joint_vector(landmarks, single_joint_object),
+            self._get_joint_vel(landmarks, single_joint_object),
+            self._get_joint_acc(landmarks, single_joint_object),
+            self._get_joint_vector_angle(landmarks, single_joint_object),
+            self._get_joint_angular_vel(landmarks, single_joint_object),
+            self._get_joint_angular_acc(landmarks, single_joint_object),
+            self._get_displacement_vector(landmarks, single_joint_object),
+        ]
+
+    def _perform_joint_pair_operations(self, landmarks, joint_pair_object):
+        # Return a list of all the joint pair operations
+        return [
+            self._get_joint_pair_vector(landmarks, joint_pair_object),
+            self._get_joint_pair_vel(landmarks, joint_pair_object),
+            self._get_joint_pair_acc(landmarks, joint_pair_object),
+            self._get_joint_pair_vector_angle(landmarks, joint_pair_object),
+            self._get_joint_pair_vector_angular_vel(landmarks, joint_pair_object),
+            self._get_joint_pair_vector_angular_acc(landmarks, joint_pair_object),
+        ]
+
+    def _perform_tri_joint_operations(self, landmarks, tri_joint_object):
+        # Return a list of all the tri joint operations
+        return [
+            self._get_tri_joint_angle(landmarks, tri_joint_object),
+            self._get_tri_joint_angular_vel(landmarks, tri_joint_object),
+            self._get_tri_joint_angular_acc(landmarks, tri_joint_object),
+        ]
