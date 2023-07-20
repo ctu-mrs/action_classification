@@ -440,7 +440,7 @@ class EmbeddingCalculator(object):
         return lmk_to - lmk_from
 
     # A funtion that returns a vector of angles between two vectors
-    def _get_angle(vector1, vector2):
+    def _get_angle(self, vector1, vector2):
         angle = np.arccos(
             np.dot(vector1, vector2)
             / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
