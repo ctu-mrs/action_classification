@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import numpy as np
 import math
-from utils.landmark_feature_initializer import LandmarkFeatureInitializer
+import os
+import sys
+
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(currentdir, "../utils/"))
+from landmark_feature_initializer import LandmarkFeatureInitializer
 
 
 # landmark structure
