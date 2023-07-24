@@ -1,4 +1,4 @@
-# Test the Normalization
+# Velocity Smoothening
 # How to proceed
 
 ## Paper 1: Using Autoencoders
