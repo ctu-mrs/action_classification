@@ -6,7 +6,7 @@ import math
 class LandmarkFeatureInitializer(object):
     def __init__(self, *landmark_names):
         self.incoming_landmark_names = landmark_names
-        _number_of_landmarks = len(self.landmark_names)
+        _number_of_landmarks = len(self.incoming_landmark_names)
 
         self._landmark_names = [
             "nose",
@@ -35,7 +35,7 @@ class LandmarkFeatureInitializer(object):
             self.previous_joint_vector = np.array([0, 0, 0], dtype=np.float32)
             self.previous_joint_vel = np.array([0, 0, 0], dtype=np.float32)
             self.previous_joint_vector_angle = np.array([0, 0, 0], dtype=np.float32)
-            self.previous_angular_vel = np.array([0, 0, 0], dtype=np.float32)
+            self.previous_joint_angular_vel = np.array([0, 0, 0], dtype=np.float32)
 
             self.joint_vector = np.array([0, 0, 0], dtype=np.float32)
             self.joint_vel = np.array([0, 0, 0], dtype=np.float32)
@@ -57,7 +57,7 @@ class LandmarkFeatureInitializer(object):
             self.joint_pair_vel = np.array([0, 0, 0], dtype=np.float32)
             self.joint_pair_acc = np.array([0, 0, 0], dtype=np.float32)
             self.joint_pair_vector_angle = np.array([0, 0, 0], dtype=np.float32)
-            self.joint_pair_vector_angular_vel = np.array([0, 0, 0], dtype=np.float32)
+            self.joint_pair_angular_vel = np.array([0, 0, 0], dtype=np.float32)
             self.joint_pair_angular_acc = np.array([0, 0, 0], dtype=np.float32)
 
         elif _number_of_landmarks == 3:

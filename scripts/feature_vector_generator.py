@@ -28,12 +28,12 @@ class FeatureVectorEmbedder(object):
         self,
         landmarks,
         time_stamp,
-        use_orientation_normalization=True,
+        use_orientation_normalization=False,
         use_procrustes_normalization=True,
     ):
-        assert landmarks.shape[0] == len(
+        assert len(landmarks) == len(
             self._landmark_names
-        ), "Unexpected number of landmarks: {}".format(landmarks.shape[0])
+        ), "Unexpected number of landmarks: {}".format(len(landmarks[0]))
         # Get pose landmarks.
         landmarks = np.copy(landmarks)
         embedder = EmbeddingCalculator()
@@ -166,7 +166,7 @@ class FeatureVectorEmbedder(object):
         # Set the target direction for upright posture
         target_direction = np.array([0, 1, 0])  # [X, Y, Z] = [0, 1, 0] (upright)
 
-        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction
+        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction vector
         rotation_quat = procrustes(shoulder_to_hip_vector, target_direction)[0]
 
         # Apply the rotation to normalize the pose landmarks for orientation

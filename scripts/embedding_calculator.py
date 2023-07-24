@@ -263,7 +263,7 @@ class EmbeddingCalculator(object):
     def _get_pose_embedding(self, landmarks):
         all_single_joint_features = []
 
-        for single_joint_object in self._all_single_joints.items():
+        for single_joint_object in self._all_single_joints.values():
             all_single_joint_features = (
                 all_single_joint_features
                 + self._perform_single_joint_operations(landmarks, single_joint_object)
@@ -292,7 +292,7 @@ class EmbeddingCalculator(object):
 
     def _get_joint_vector(self, landmarks, single_joint_object):
         single_joint_object.joint_vector = landmarks[
-            self._landmark_names.index(single_joint_object.landmark_names[0])
+            self._landmark_names.index(single_joint_object.incoming_landmark_names[0])
         ]
         return single_joint_object.joint_vector
 
@@ -345,8 +345,8 @@ class EmbeddingCalculator(object):
     def _get_joint_pair_vector(self, landmarks, joint_pair_object):
         joint_pair_object.joint_pair_vector = self._get_distance_by_names(
             landmarks,
-            joint_pair_object.landmark_names[0],
-            joint_pair_object.landmark_names[1],
+            joint_pair_object.incoming_landmark_names[0],
+            joint_pair_object.incoming_landmark_names[1],
         )
         return joint_pair_object.joint_pair_vector
 
@@ -397,18 +397,22 @@ class EmbeddingCalculator(object):
         # Takes three points a,b,c and returns the product of the unit cross product of vectors ab and bc and the angle between them.
         vector_ab = self._get_distance_by_names(
             landmarks,
-            tri_joint_object.landmark_names[0],
-            tri_joint_object.landmark_names[1],
+            tri_joint_object.incoming_landmark_names[0],
+            tri_joint_object.incoming_landmark_names[1],
         )
         vector_bc = self._get_distance_by_names(
             landmarks,
-            tri_joint_object.landmark_names[1],
-            tri_joint_object.landmark_names[2],
+            tri_joint_object.incoming_landmark_names[1],
+            tri_joint_object.incoming_landmark_names[2],
         )
 
         # Calculate the unit cross product of vectors ab and bc
         cross_product = np.cross(vector_ab, vector_bc)
-        unit_cross_product /= np.linalg.norm(cross_product)
+        norm = np.linalg.norm(cross_product)
+        if norm == 0:
+            unit_cross_product = norm
+        else:
+            unit_cross_product = cross_product / norm
 
         # Calculate the angle between vectors ab and bc
         angle = self._get_angle(vector_ab, vector_bc)

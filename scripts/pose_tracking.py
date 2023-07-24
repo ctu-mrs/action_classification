@@ -82,21 +82,20 @@ class PostTrackingClass(object):
         self.landmarkcoords.vis = array.array("f", (0 for f in range(0, 33)))
 
         self._landmark_names = [
-            "nose",
-            "left_shoulder",
-            "right_shoulder",
-            "left_elbow",
-            "right_elbow",
-            "left_wrist",
-            "right_wrist",
-            "left_hip",
-            "right_hip",
-            "left_knee",
-            "right_knee",
-            "left_heel",
-            "right_heel",
+            "PoseLandmark.NOSE",
+            "PoseLandmark.LEFT_SHOULDER",
+            "PoseLandmark.RIGHT_SHOULDER",
+            "PoseLandmark.LEFT_ELBOW",
+            "PoseLandmark.RIGHT_ELBOW",
+            "PoseLandmark.LEFT_WRIST",
+            "PoseLandmark.RIGHT_WRIST",
+            "PoseLandmark.LEFT_HIP",
+            "PoseLandmark.RIGHT_HIP",
+            "PoseLandmark.LEFT_KNEE",
+            "PoseLandmark.RIGHT_KNEE",
+            "PoseLandmark.LEFT_HEEL",
+            "PoseLandmark.RIGHT_HEEL",
         ]
-
         rospy.loginfo("Pose Tracker Initialized")
 
     def Callback(self, ros_data, image_encoding="bgr8"):
@@ -131,7 +130,7 @@ class PostTrackingClass(object):
         if results.pose_landmarks:
             i = 0
             self.succ_frames += 1.0
-            to_be_sent_landmarks = ()
+            to_be_sent_landmarks = np.zeros((13, 3), dtype=np.float32)
             # Saving each landmark's name and coordinate to our variable
             for landname in mp_pose.PoseLandmark:
                 self.landmarkcoords.name.append(str(landname))
@@ -141,12 +140,12 @@ class PostTrackingClass(object):
                 self.landmarkcoords.vis[i] = results.pose_landmarks.landmark[
                     landname
                 ].visibility
-                if landname in self._landmark_names:
-                    to_be_sent_landmarks += (
+                if str(landname) in self._landmark_names:
+                    to_be_sent_landmarks[self._landmark_names.index(str(landname))] = [
                         results.pose_landmarks.landmark[landname].x,
                         results.pose_landmarks.landmark[landname].y,
                         results.pose_landmarks.landmark[landname].visibility,
-                    )
+                    ]
 
                 i += 1
 
