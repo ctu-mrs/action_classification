@@ -161,7 +161,9 @@ class FeatureVectorEmbedder(object):
         right_hip = landmarks[self._landmark_names.index("right_hip")]
 
         # Calculate the vector representing the line connecting shoulder and hip centers
-        shoulder_to_hip_vector = right_hip - left_shoulder
+        shoulder_to_hip_vector = (right_shoulder + left_shoulder) * 0.5 - (
+            right_hip + left_hip
+        ) * 0.5
 
         # Set the target direction for upright posture
         target_direction = np.array([0, 1, 0])  # [X, Y, Z] = [0, 1, 0] (upright)
