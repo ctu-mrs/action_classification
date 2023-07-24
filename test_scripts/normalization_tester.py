@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 import os
+import datetime
 
 scriptpath = "../scripts"
 sys.path.append(os.path.abspath(scriptpath))
@@ -29,9 +30,13 @@ sample_landmarks = np.array(
 
 # Step 3: Instantiate FeatureVectorEmbedder
 embedder = FeatureVectorEmbedder()
-
+time = datetime.datetime.now().timestamp()
 # Step 4: Normalize landmarks
-normalized_landmarks = embedder(sample_landmarks, use_orientation_normalization=True)
+normalized_landmarks = embedder(
+    sample_landmarks,
+    time_stamp=time,
+    use_orientation_normalization=True,
+)
 
 print(normalized_landmarks)
 # Step 5: Visualize the landmarks

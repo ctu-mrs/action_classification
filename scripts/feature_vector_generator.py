@@ -45,7 +45,7 @@ class FeatureVectorEmbedder(object):
             # rotated_landmarks = self._normalize_pose_orientation(landmarks)
             rotated_landmarks = self._normalize_pose_orientation_procrustes(landmarks)
 
-            feature_vector = embedder(rotated_landmarks)
+            feature_vector = embedder(rotated_landmarks, time_stamp)
             return feature_vector
 
         # Get embedding.
@@ -166,12 +166,45 @@ class FeatureVectorEmbedder(object):
         # Set the target direction for upright posture
         target_direction = np.array([0, 1, 0])  # [X, Y, Z] = [0, 1, 0] (upright)
 
-        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction vector
-        rotation_quat = procrustes(shoulder_to_hip_vector, target_direction)[0]
+        cross_prod = np.cross(shoulder_to_hip_vector, target_direction)
+
+        # Calculate rotation matrix to alignt shoulder-hip line with target direction
+        # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+        dot_prod = np.dot(shoulder_to_hip_vector, target_direction)
+        dot_prod = dot_prod / np.linalg.norm(shoulder_to_hip_vector)
+        angle = np.arccos(dot_prod)
+        rotation_matrix = np.array(
+            [
+                [
+                    np.cos(angle) + cross_prod[0] ** 2 * (1 - np.cos(angle)),
+                    cross_prod[0] * cross_prod[1] * (1 - np.cos(angle))
+                    - cross_prod[2] * np.sin(angle),
+                    cross_prod[0] * cross_prod[2] * (1 - np.cos(angle))
+                    + cross_prod[1] * np.sin(angle),
+                ],
+                [
+                    cross_prod[1] * cross_prod[0] * (1 - np.cos(angle))
+                    + cross_prod[2] * np.sin(angle),
+                    np.cos(angle) + cross_prod[1] ** 2 * (1 - np.cos(angle)),
+                    cross_prod[1] * cross_prod[2] * (1 - np.cos(angle))
+                    - cross_prod[0] * np.sin(angle),
+                ],
+                [
+                    cross_prod[2] * cross_prod[0] * (1 - np.cos(angle))
+                    - cross_prod[1] * np.sin(angle),
+                    cross_prod[2] * cross_prod[1] * (1 - np.cos(angle))
+                    + cross_prod[0] * np.sin(angle),
+                    np.cos(angle) + cross_prod[2] ** 2 * (1 - np.cos(angle)),
+                ],
+            ]
+        )
+
+        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction vector using SVD
 
         # Apply the rotation to normalize the pose landmarks for orientation
         rotated_landmarks = np.copy(landmarks)
         for i in range(len(rotated_landmarks)):
-            rotated_landmarks[i] = rotation_quat.apply(rotated_landmarks[i])
+            # Use the rotation matrix to rotate the landmarks
+            rotated_landmarks[i] = np.matmul(rotation_matrix, rotated_landmarks[i])
 
         return rotated_landmarks
