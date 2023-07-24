@@ -10,35 +10,28 @@ sys.path.append(os.path.abspath(scriptpath))
 from feature_vector_generator import FeatureVectorEmbedder
 
 # Step 2: Generate sample landmarks
-sample_landmarks = np.array(
-    [
-        [0.0, 0.0, 0.0],  # nose
-        [-7.5, 15.0, -7.5],  # left_shoulder
-        [7.5, 15.0, -7.5],  # right_shoulder
-        [-15.0, 30.0, -15.0],  # left_elbow
-        [15.0, 30.0, -7.5],  # right_elbow
-        [-20.0, 45.0, -35.0],  # left_wrist
-        [20.0, 45.0, -25.5],  # right_wrist
-        [-7.5, 60.0, -15.0],  # left_hip
-        [7.5, 60.0, -15.0],  # right_hip
-        [-7.5, 90.0, -30.5],  # left_knee
-        [7.5, 90.0, -30.5],  # right_knee
-        [-7.5, 120.0, -22.5],  # left_heel
-        [7.5, 120.0, -22.5],  # right_heel
-    ]
+sample_landmarks = (
+    np.array(
+        [
+            [0.0, 1.7, 0.0],  # Nose
+            [-0.25, 1.5, 0.0],  # Left Shoulder
+            [0.75, 1.5, 0.0],  # Right Shoulder
+            [-0.9, 1.2, 0.05],  # Left Elbow
+            [0.9, 1.2, 0.0],  # Right Elbow
+            [-1.1, 0.9, 0.1],  # Left Wrist
+            [1.1, 0.9, 0.0],  # Right Wrist
+            [-0.25, 0.0, 0.0],  # Left Hip
+            [0.25, 0.1, 0.01],  # Right Hip
+            [-0.25, -0.5, 0.0],  # Left Knee
+            [0.25, -0.5, 0.0],  # Right Knee
+            [-0.25, -1.0, 0.0],  # Left Heel
+            [0.25, -1.0, 0.0],  # Right Heel
+        ]
+    )
+    * 100
 )
 
-# Step 3: Instantiate FeatureVectorEmbedder
-embedder = FeatureVectorEmbedder()
-time = datetime.datetime.now().timestamp()
-# Step 4: Normalize landmarks
-normalized_landmarks = embedder(
-    sample_landmarks,
-    time_stamp=time,
-    use_orientation_normalization=True,
-)
 
-print(normalized_landmarks)
 # Step 5: Visualize the landmarks
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
@@ -51,6 +44,17 @@ ax.scatter(
     c="blue",
     label="Non-normalized",
 )
+# Step 3: Instantiate FeatureVectorEmbedder
+embedder = FeatureVectorEmbedder()
+time = datetime.datetime.now().timestamp()
+# Step 4: Normalize landmarks
+normalized_landmarks = embedder(
+    sample_landmarks,
+    time_stamp=time,
+    use_orientation_normalization=True,
+)
+
+print(normalized_landmarks)
 
 # Scatter plot of normalized landmarks
 ax.scatter(

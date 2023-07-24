@@ -410,7 +410,7 @@ class EmbeddingCalculator(object):
         cross_product = np.cross(vector_ab, vector_bc)
         norm = np.linalg.norm(cross_product)
         if norm == 0:
-            unit_cross_product = norm
+            unit_cross_product = np.array([0, 0, 0])
         else:
             unit_cross_product = cross_product / norm
 

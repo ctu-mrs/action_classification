@@ -29,7 +29,6 @@ class FeatureVectorEmbedder(object):
         landmarks,
         time_stamp,
         use_orientation_normalization=False,
-        use_procrustes_normalization=True,
     ):
         assert len(landmarks) == len(
             self._landmark_names
@@ -43,13 +42,15 @@ class FeatureVectorEmbedder(object):
             # This normalizes using the angle between shoulder and hip centres,
             # thus less effective in bent body positions.
             # rotated_landmarks = self._normalize_pose_orientation(landmarks)
-            rotated_landmarks = self._normalize_pose_orientation_procrustes(landmarks)
+            rotated_landmarks = self._normalize_pose_orientation(landmarks)
 
             feature_vector = embedder(rotated_landmarks, time_stamp)
+            return rotated_landmarks
             return feature_vector
 
         # Get embedding.
         feature_vector = embedder(landmarks, time_stamp)
+        return landmarks
         return feature_vector
 
     def _normalize_pose_landmarks(self, landmarks):
@@ -115,98 +116,57 @@ class FeatureVectorEmbedder(object):
         return max(torso_size * torso_size_multiplier, max_dist)
 
     def _normalize_pose_orientation(self, landmarks):
-        left_shoulder = landmarks[self._landmark_names.index("left_shoulder")]
-        right_shoulder = landmarks[self._landmark_names.index("right_shoulder")]
-        left_hip = landmarks[self._landmark_names.index("left_hip")]
-        right_hip = landmarks[self._landmark_names.index("right_hip")]
-
-        # Calculate the vector representing the line connecting shoulder and hip centers
-        shoulder_to_hip_vector = right_hip - left_shoulder
-
-        # Calculate the angle of the shoulder-hip line
-        angle_x = np.arctan2(shoulder_to_hip_vector[1], shoulder_to_hip_vector[2])
-        angle_y = np.arctan2(shoulder_to_hip_vector[0], shoulder_to_hip_vector[2])
-        angle_z = np.arctan2(shoulder_to_hip_vector[0], shoulder_to_hip_vector[1])
-
-        # Apply the rotation to normalize the pose landmarks for orientation
         rotated_landmarks = np.copy(landmarks)
-        cos_x = np.cos(-angle_x)
-        sin_x = np.sin(-angle_x)
-        cos_y = np.cos(-angle_y)
-        sin_y = np.sin(-angle_y)
-        cos_z = np.cos(-angle_z)
-        sin_z = np.sin(-angle_z)
-        for i in range(len(rotated_landmarks)):
-            x = landmarks[i][0] - left_shoulder[0]
-            y = landmarks[i][1] - left_shoulder[1]
-            z = landmarks[i][2] - left_shoulder[2]
-            rotated_landmarks[i][0] = (
-                x * cos_y * cos_z
-                - y * (cos_x * sin_z - sin_x * sin_y * cos_z)
-                + z * (sin_x * sin_z + cos_x * sin_y * cos_z)
-            )
-            rotated_landmarks[i][1] = x * sin_y + y * cos_x * cos_y + z * sin_x * cos_y
-            rotated_landmarks[i][2] = (
-                -x * cos_y * sin_z
-                + y * (cos_x * cos_z + sin_x * sin_y * sin_z)
-                - z * (sin_x * cos_z - cos_x * sin_y * sin_z)
-            )
-
-        return rotated_landmarks
-
-    def _normalize_pose_orientation_procrustes(self, landmarks):
-        left_shoulder = landmarks[self._landmark_names.index("left_shoulder")]
-        right_shoulder = landmarks[self._landmark_names.index("right_shoulder")]
-        left_hip = landmarks[self._landmark_names.index("left_hip")]
-        right_hip = landmarks[self._landmark_names.index("right_hip")]
-
+        left_shoulder = rotated_landmarks[self._landmark_names.index("left_shoulder")]
+        right_shoulder = rotated_landmarks[self._landmark_names.index("right_shoulder")]
+        left_hip = rotated_landmarks[self._landmark_names.index("left_hip")]
+        right_hip = rotated_landmarks[self._landmark_names.index("right_hip")]
+        left_to_right_hip = right_hip - left_hip
         # Calculate the vector representing the line connecting shoulder and hip centers
-        shoulder_to_hip_vector = (right_shoulder + left_shoulder) * 0.5 - (
+        hip_to_shoulder_vector = (right_shoulder + left_shoulder) * 0.5 - (
             right_hip + left_hip
         ) * 0.5
 
         # Set the target direction for upright posture
-        target_direction = np.array([0, 1, 0])  # [X, Y, Z] = [0, 1, 0] (upright)
+        target_direction = np.array([1, 0, 0])  # [X, Y, Z] = [1, 0, 0] (upright)
 
-        cross_prod = np.cross(shoulder_to_hip_vector, target_direction)
+        # Normalize the vector
+        if np.linalg.norm(left_to_right_hip) != 0:
+            left_to_right_hip /= np.linalg.norm(left_to_right_hip)
+        else:
+            left_to_right_hip = np.array([0, 0, 0])
 
-        # Calculate rotation matrix to alignt shoulder-hip line with target direction
-        # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
-        dot_prod = np.dot(shoulder_to_hip_vector, target_direction)
-        dot_prod = dot_prod / np.linalg.norm(shoulder_to_hip_vector)
-        angle = np.arccos(dot_prod)
-        rotation_matrix = np.array(
-            [
-                [
-                    np.cos(angle) + cross_prod[0] ** 2 * (1 - np.cos(angle)),
-                    cross_prod[0] * cross_prod[1] * (1 - np.cos(angle))
-                    - cross_prod[2] * np.sin(angle),
-                    cross_prod[0] * cross_prod[2] * (1 - np.cos(angle))
-                    + cross_prod[1] * np.sin(angle),
-                ],
-                [
-                    cross_prod[1] * cross_prod[0] * (1 - np.cos(angle))
-                    + cross_prod[2] * np.sin(angle),
-                    np.cos(angle) + cross_prod[1] ** 2 * (1 - np.cos(angle)),
-                    cross_prod[1] * cross_prod[2] * (1 - np.cos(angle))
-                    - cross_prod[0] * np.sin(angle),
-                ],
-                [
-                    cross_prod[2] * cross_prod[0] * (1 - np.cos(angle))
-                    - cross_prod[1] * np.sin(angle),
-                    cross_prod[2] * cross_prod[1] * (1 - np.cos(angle))
-                    + cross_prod[0] * np.sin(angle),
-                    np.cos(angle) + cross_prod[2] ** 2 * (1 - np.cos(angle)),
-                ],
-            ]
-        )
-
-        # Calculate the rotation quaternion to align the shoulder-hip line with the target direction vector using SVD
-
-        # Apply the rotation to normalize the pose landmarks for orientation
-        rotated_landmarks = np.copy(landmarks)
-        for i in range(len(rotated_landmarks)):
-            # Use the rotation matrix to rotate the landmarks
-            rotated_landmarks[i] = np.matmul(rotation_matrix, rotated_landmarks[i])
+        dot_product = np.dot(left_to_right_hip, target_direction)
+        angle = math.acos(dot_product)
+        if angle == 0:
+            return rotated_landmarks
+        cross_product = np.cross(left_to_right_hip, target_direction)
+        # Rotate hip_to_shoulder_vector towards target_direction along the cross_product axis by angle
+        rotation_matrix = self._rotation_matrix_from_axis_angle(cross_product, angle)
+        rotated_landmarks = np.dot(rotation_matrix, rotated_landmarks.T).T
+        print(rotated_landmarks)
 
         return rotated_landmarks
+
+    def _rotation_matrix_from_axis_angle(self, axis, angle):
+        """Creates rotation matrix corresponding to the rotation around given axis by angle."""
+        axis = np.asarray(axis)
+        axis = axis / math.sqrt(np.dot(axis, axis))
+        a = math.cos(angle / 2.0)
+        b, c, d = -axis * math.sin(angle / 2.0)
+        aa, bb, cc, dd = a * a, b * b, c * c, d * d
+        bc, ad, ac, ab, bd, cd = (
+            b * c,
+            a * d,
+            a * c,
+            a * b,
+            b * d,
+            c * d,
+        )
+        return np.array(
+            [
+                [aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc],
+            ]
+        )
