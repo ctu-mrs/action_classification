@@ -450,10 +450,20 @@ class EmbeddingCalculator(object):
 
     # A funtion that returns a vector of angles between two vectors
     def _get_angle(self, vector1, vector2):
-        angle = np.arccos(
-            np.dot(vector1, vector2)
-            / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
-        )
+        if (
+            np.linalg.norm(vector1) == 0
+            or np.linalg.norm(vector2) == 0
+            or np.linalg.norm(vector1) == np.nan
+            or np.linalg.norm(vector2) == np.nan
+            or np.dot(vector1, vector2) == np.nan
+            or np.dot(vector1, vector2) == 0
+        ):
+            angle = 0.0
+        else:
+            angle = np.arccos(
+                np.dot(vector1, vector2)
+                / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            )
         return angle
 
     def set_all_previous_variables(self):
