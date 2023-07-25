@@ -4,10 +4,11 @@
 ## Paper 1: Using Autoencoders
 ### x,y,z -> FVC -> Autoencoder -> Sequencer -> KNN+DTW
 1. Create the FVC file to encode joint vectors, vels, acc, ang vels and ang accs. 
+2. Write the knn with DTW as its distance metric. 
+3. Create Feature Selector and use it with the knn to find the best features.
 2. Then write autoencoder. Need to train, extract weights and then use it for knn.
 3. Create sequencer: Has the parameter of sliding window length and sliding window steps   
-4. Write the knn with DTW as its distance metric. 
-Consider for FVC that you are not recieving 33 landmarks. Instead, you are getting the major ones which another file will take care of. 
+Consider for FVC that you are not recieving 33 landmarks. Instead, you are getting the major ones which another file will take care of(13 landmarks). 
 ## Paper 2: Using Sequencers
 1. We will keep the pose tracking and landmark2Dto3D as it is. 
 2. We will change what comes afterwards

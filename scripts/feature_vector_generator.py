@@ -45,12 +45,10 @@ class FeatureVectorEmbedder(object):
             rotated_landmarks = self._normalize_pose_orientation(landmarks)
 
             feature_vector = embedder(rotated_landmarks, time_stamp)
-            return rotated_landmarks
             return feature_vector
 
         # Get embedding.
         feature_vector = embedder(landmarks, time_stamp)
-        return landmarks
         return feature_vector
 
     def _normalize_pose_landmarks(self, landmarks):
