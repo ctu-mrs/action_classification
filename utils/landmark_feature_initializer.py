@@ -70,3 +70,76 @@ class LandmarkFeatureInitializer(object):
 
         else:
             raise ValueError("Too Many Arguments to the Landmark Feature Initializer")
+
+        def __repr__(self):
+            _number_of_landmarks = len(self.incoming_landmark_names)
+            if _number_of_landmarks == 1:
+                # Display all the variables
+                return (
+                    "LandmarkFeatureInitializer("
+                    + "previous_joint_vector="
+                    + str(self.previous_joint_vector)
+                    + ", previous_joint_vel="
+                    + str(self.previous_joint_vel)
+                    + ", previous_joint_vector_angle="
+                    + str(self.previous_joint_vector_angle)
+                    + ", previous_joint_angular_vel="
+                    + str(self.previous_joint_angular_vel)
+                    + ", joint_vector="
+                    + str(self.joint_vector)
+                    + ", joint_vel="
+                    + str(self.joint_vel)
+                    + ", joint_acc="
+                    + str(self.joint_acc)
+                    + ", joint_vector_angle="
+                    + str(self.joint_vector_angle)
+                    + ", joint_angular_vel="
+                    + str(self.joint_angular_vel)
+                    + ", joint_angular_acc="
+                    + str(self.joint_angular_acc)
+                    + ", displacement_vector="
+                    + str(self.displacement_vector)
+                    + ")"
+                )
+            elif _number_of_landmarks == 2:
+                # Display all the variables
+                return (
+                    "LandmarkFeatureInitializer("
+                    + "previous_joint_pair_vector="
+                    + str(self.previous_joint_pair_vector)
+                    + ", previous_joint_pair_vel="
+                    + str(self.previous_joint_pair_vel)
+                    + ", previous_joint_pair_vector_angle="
+                    + str(self.previous_joint_pair_vector_angle)
+                    + ", previous_joint_pair_angular_vel="
+                    + str(self.previous_joint_pair_angular_vel)
+                    + ", joint_pair_vector="
+                    + str(self.joint_pair_vector)
+                    + ", joint_pair_vel="
+                    + str(self.joint_pair_vel)
+                    + ", joint_pair_acc="
+                    + str(self.joint_pair_acc)
+                    + ", joint_pair_vector_angle="
+                    + str(self.joint_pair_vector_angle)
+                    + ", joint_pair_angular_vel="
+                    + str(self.joint_pair_angular_vel)
+                    + ", joint_pair_angular_acc="
+                    + str(self.joint_pair_angular_acc)
+                    + ")"
+                )
+            elif _number_of_landmarks == 3:
+                # Display all the variables
+                return (
+                    "LandmarkFeatureInitializer("
+                    + "previous_tri_joint_angle="
+                    + str(self.previous_tri_joint_angle)
+                    + ", previous_tri_joint_angular_vel="
+                    + str(self.previous_tri_joint_angular_vel)
+                    + ", tri_joint_angle="
+                    + str(self.tri_joint_angle)
+                    + ", tri_joint_angular_vel="
+                    + str(self.tri_joint_angular_vel)
+                    + ", tri_joint_angular_acc="
+                    + str(self.tri_joint_angular_acc)
+                    + ")"
+                )
