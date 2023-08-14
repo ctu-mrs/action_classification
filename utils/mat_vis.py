@@ -13,7 +13,10 @@ mat_path = os.path.expanduser(
 # Load the .mat file
 data = scipy.io.loadmat(mat_path)
 skeleton_poses = data["d_skel"]  # Assuming the variable name is skeleton_poses
-
+print(type(skeleton_poses))
+indices_to_select = [0, 4, 8, 5, 9, 6, 10, 12, 16, 13, 17, 14, 18]
+skeleton_poses = skeleton_poses[indices_to_select, :, :]
+print(type(skeleton_poses))
 # Create a figure and 3D axes
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
