@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/akash/swarm_ws/src/action_classification/build/devel/setup.sh
