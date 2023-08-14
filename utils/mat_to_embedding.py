@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import scipy.io
 import sys
 
@@ -8,7 +9,7 @@ from feature_vector_generator import FeatureVectorEmbedder
 
 mat_path = os.path.expanduser("~/git/action_classification/utd_mhad_dataset/")
 embedding_path = os.path.expanduser(
-    "~/git/action_classification/utd_mhad_dataset/embeddings/"
+    "~/git/action_classification/utd_mhad_dataset/embeddings"
 )
 embedder = FeatureVectorEmbedder()
 for root, directories, files in os.walk(mat_path):
@@ -19,12 +20,12 @@ for root, directories, files in os.walk(mat_path):
             skeleton_poses = data["d_skel"]
             indices_to_select = [0, 4, 8, 5, 9, 6, 10, 12, 16, 13, 17, 14, 18]
             skeleton_poses = skeleton_poses[indices_to_select, :, :]
-            embedding_poses = []
+            embedding_poses = np.empty((341, 3, skeleton_poses.shape[2]))
             for i in range(skeleton_poses.shape[2]):
                 embedding_singular_pose = embedder(
                     skeleton_poses[:, :, i], (float(i + 1) / 30.0)
                 )  # 30 fps)
-                embedding_poses.append(embedding_singular_pose)
+                embedding_poses[:, :, i] = embedding_singular_pose
 
             # Get the parent directory of the mat file
             parent_dir = os.path.dirname(mat_file_path)
@@ -37,9 +38,11 @@ for root, directories, files in os.walk(mat_path):
                 os.mkdir(embedding_path)
 
             # Create the output parent directory
-            new_parent_dir = os.path.join(embedding_path, parent_dir)
+            new_parent_dir = os.path.join(
+                embedding_path, parent_dir.replace("utd_mhad_dataset/", "", 1)
+            )
             if not os.path.exists(new_parent_dir):
-                os.mkdir(new_parent_dir)
+                os.makedirs(new_parent_dir)
 
             # Save the mat file to the output directory
             new_mat_file_path = os.path.join(new_parent_dir, file_name + ".mat")
