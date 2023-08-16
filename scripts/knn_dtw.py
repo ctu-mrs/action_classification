@@ -135,6 +135,8 @@ def main():
     # Load the embeddings
     action_classification = ActionClassification(embedding_path)
     rospy.loginfo("Embeddings loaded")
+    # The ball tree will be created first in the action classification and then the subscribers will be initialized.
+
     # Get the 3D landmark coordinates
     rospy.loginfo("Initializing ROS interface")
     ros_interface = ROSInterfaceClass()
