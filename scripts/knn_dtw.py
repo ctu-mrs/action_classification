@@ -59,7 +59,15 @@ class ActionClassification(object):
         self._embedding_samples, self._class_names = self._load_embedding_samples(
             embedding_dir, file_extension
         )
-        self._tree = BallTree(
+        rospy.loginfo("Embedding samples loaded")
+        self._ball_tree = self._generateBallTree(leaf_size=leaf_size)
+        rospy.loginfo("Ball Tree Generated")
+
+    def _generateBallTree(self, leaf_size=40):
+        """
+        This method generates a ball tree for the embedding samples. The ball tree is used to perform knn classification.
+        """
+        tree = BallTree(
             np.array(
                 [
                     sample.embedding
@@ -70,9 +78,7 @@ class ActionClassification(object):
             leaf_size=leaf_size,
             metric=fastdtw,
         )
-
-    def knn_dtw_predict(self, embedding_seq, n_neighbors=10):
-        pass
+        return tree
 
     def knn_dtw_classify(self, embedding_seq, n_neighbors=10):
         """
@@ -134,7 +140,6 @@ def main():
     rospy.loginfo("Loading the embeddings")
     # Load the embeddings
     action_classification = ActionClassification(embedding_path)
-    rospy.loginfo("Embeddings loaded")
     # The ball tree will be created first in the action classification and then the subscribers will be initialized.
 
     # Get the 3D landmark coordinates
