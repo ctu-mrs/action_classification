@@ -1,9 +1,10 @@
 import scipy.io as sio
 import numpy as np
 import os
-import fastdtw
+from fastdtw import fastdtw
 from sklearn.neighbors import BallTree
 from feature_vector_generator import FeatureVectorEmbedder
+from scipy.spatial.distance import euclidean
 
 
 class PoseSample(object):
@@ -52,7 +53,7 @@ class ActionClassification(object):
                 ]
             ),
             leaf_size=leaf_size,
-            metric=fastdtw,
+            metric=self._dtw_distances,
         )
         return tree
 
@@ -60,6 +61,11 @@ class ActionClassification(object):
         """
         This methodes takes a sequence of embeddings and classify the sequence into a class as defined by the class names. It classifies the sequence using a ball tree implementation of knn and uses dtw as a distance metric.
         """
+
+    def _dtw_distances(self, seq1, seq2):
+        seq1_flat = [matrix.flatten() for matrix in seq1]
+        seq2_flat = [matrix.flatten() for matrix in seq2]
+        return fastdtw(seq1_flat, seq2_flat, dist=euclidean)
 
     def _load_embedding_samples(self, embedding_dir, file_extension):
         """
