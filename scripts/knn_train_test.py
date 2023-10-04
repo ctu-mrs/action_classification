@@ -132,6 +132,7 @@ def main():
         random_state=42,
     )
     print("Training")
+    print(len(X_test))
     y_pred = []
     for test_sample in X_test:
         distances = []
