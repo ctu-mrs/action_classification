@@ -11,8 +11,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import time
-import cProfile
-import warnings
 
 
 class PoseSample(object):
@@ -111,47 +109,6 @@ class ActionClassification(object):
         class_names = np.unique([sample.class_name for sample in embedding_samples])
         return embedding_samples, class_names
 
-    def lb_keogh(self, s1, s2, r):
-        """
-        Compute LB_KEOGH lower bound to dynamic time warping.
-
-        Parameters:
-        s1, s2 : array-like
-            Input sequences.
-        r : int
-            Reach, or size of envelope to compute.
-
-        Returns:
-        lb : float
-            LB_Keogh lower bound
-        """
-        lb_sum = 0
-
-        s1 = np.swapaxes(s1.reshape(self.n_embeddings * 3, s1.shape[2]), 0, 1)
-        s2 = np.swapaxes(s2.reshape(self.n_embeddings * 3, s2.shape[2]), 0, 1)
-        for index, value in enumerate(s1):
-            slice_of_s2 = s2[max(0, index - r) : min(len(s2), index + r)]
-            if slice_of_s2.size > 0:  # Check that slice_of_s2 is not empty
-                lower_bound = np.min(slice_of_s2, axis=0)
-                upper_bound = np.max(slice_of_s2, axis=0)
-
-                above_upper_bound = value > upper_bound
-                below_lower_bound = value < lower_bound
-
-                if np.any(above_upper_bound):
-                    lb_sum += np.sum(
-                        (value[above_upper_bound] - upper_bound[above_upper_bound]) ** 2
-                    )
-                if np.any(below_lower_bound):
-                    lb_sum += np.sum(
-                        (value[below_lower_bound] - lower_bound[below_lower_bound]) ** 2
-                    )
-            else:
-                warnings.warn("slice_of_s2 is empty")
-                # Handle the case where slice_of_s2 is empty
-                pass  # You may want to return a specific value or raise an exception
-        return np.sqrt(lb_sum)
-
 
 def main():
     # Get the path to the embeddings
@@ -178,30 +135,16 @@ def main():
     print("Training")
     print(len(X_test))
     y_pred = []
-    best_dist = float("inf")
-    best_match = None
     start_time = time.process_time()
-
-    # Using the lb_keogh lower bound to reduce the number of dtw computations and speed up the process for knn
     for test_sample in X_test:
         distances = []
         for train_sample in X_train:
-            lb_dist = action_classifier.lb_keogh(
-                test_sample.embedding, train_sample.embedding, 5
-            )
-            if lb_dist < best_dist:
-                dist = action_classifier.dtw_distances(
+            distances.append(
+                action_classifier.dtw_distances(
                     test_sample.embedding, train_sample.embedding
                 )
-                if dist < best_dist:
-                    best_dist = dist
-                    best_match = train_sample
-                distances.append(dist)
-            else:
-                distances.append(float("inf"))
-
+            )
         y_pred.append(y_train[np.argmin(distances)])
-
     print("Testing")
     end_time = time.process_time()
     print(f"Time taken: {end_time - start_time}")
