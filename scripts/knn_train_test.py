@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+import time
 
 
 class PoseSample(object):
@@ -134,6 +135,7 @@ def main():
     print("Training")
     print(len(X_test))
     y_pred = []
+    start_time = time.process_time()
     for test_sample in X_test:
         distances = []
         for train_sample in X_train:
@@ -144,6 +146,8 @@ def main():
             )
         y_pred.append(y_train[np.argmin(distances)])
     print("Testing")
+    end_time = time.process_time()
+    print(f"Time taken: {end_time - start_time}")
     print(accuracy_score(y_test, y_pred))
     print(confusion_matrix(y_test, y_pred))
     print(classification_report(y_test, y_pred))
