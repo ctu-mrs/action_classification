@@ -21,14 +21,14 @@
 	TotalVirtualMemory="2047"
 	TotalPhysicalMemory="30852"
 	LogicalProcessorsPerPhysical="2"
-	ProcessorClockFrequency="2953.95"
+	ProcessorClockFrequency="3367.73"
 	>
 	<Testing>
-		<StartDateTime>Oct 11 11:55 CEST</StartDateTime>
-		<StartTestTime>1697018146</StartTestTime>
+		<StartDateTime>Oct 11 19:54 CEST</StartDateTime>
+		<StartTestTime>1697046848</StartTestTime>
 		<TestList/>
-		<EndDateTime>Oct 11 11:55 CEST</EndDateTime>
-		<EndTestTime>1697018146</EndTestTime>
+		<EndDateTime>Oct 11 19:54 CEST</EndDateTime>
+		<EndTestTime>1697046848</EndTestTime>
 		<ElapsedMinutes>0</ElapsedMinutes>
 	</Testing>
 </Site>
