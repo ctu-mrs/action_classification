@@ -109,28 +109,29 @@ def main():
 
     # Verify that the normalization worked
     verify_normalization(normalized_embeddings)
-    # Write the normalized embeddings to a file in the same format as the original embeddings
-    # Get the parent directory of the mat file
-    parent_dir = os.path.dirname(embedding_path)
+    # Write the normalized embeddings to a file in the same format as the original embeddings and as the same folder structure
+    normalized_embedding_path = os.path.join(currentdir, "../normalized_embeddings")
+    for sample in embedding_samples:
+        # Get the parent directory of the mat file
+        parent_dir = os.path.dirname(sample.name)
 
-    # Create the output directory if it doesn't exist
-    if not os.path.exists("normalized_embeddings"):
-        os.mkdir("normalized_embeddings")
+        # Get the name of the mat file without the extension
+        file_name = os.path.basename(sample.name).split(".")[0]
 
-    # Create the output parent directory
-    new_parent_dir = os.path.join(
-        "normalized_embeddings", parent_dir.replace("embeddings_utd_mhad/", "", 1)
-    )
-    if not os.path.exists(new_parent_dir):
-        os.makedirs(new_parent_dir)
+        # Create the output directory if it doesn't exist
+        if not os.path.exists(normalized_embedding_path):
+            os.mkdir(normalized_embedding_path)
 
-    # Save the mat file to the output directory
-    for idx, sample in enumerate(embedding_samples):
-        new_mat_file_path = os.path.join(
-            new_parent_dir, sample.name.replace(".mat", "_normalized.mat")
+        # Create the output parent directory
+        new_parent_dir = os.path.join(
+            normalized_embedding_path, parent_dir.replace("embeddings_utd_mhad/", "", 1)
         )
-        sio.io.savemat(new_mat_file_path, {"embedding": normalized_embeddings[idx]})
-    print("Normalized embeddings saved")
+        if not os.path.exists(new_parent_dir):
+            os.makedirs(new_parent_dir)
+
+        # Save the mat file to the output directory
+        new_mat_file_path = os.path.join(new_parent_dir, file_name + ".mat")
+        sio.savemat(new_mat_file_path, {"embedding": normalized_embedding})
 
 
 if __name__ == "__main__":
