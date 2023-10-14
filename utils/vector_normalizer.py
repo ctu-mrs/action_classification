@@ -87,6 +87,7 @@ class VectorNormalizer(object):
     def _normalize_embedding(self, sample, normalization_method="minmax"):
         if normalization_method == "minmax":
             normalized_embedding = np.zeros(sample.shape)
+            print(sample.shape)
             for i in range(sample.shape[2]):
                 normalized_embedding[:, :, i] = (
                     2
@@ -111,11 +112,7 @@ class VectorNormalizer(object):
                     mat_file_path = os.path.join(root, file)
                     data = sio.loadmat(mat_file_path)
                     embedding = data["embedding"]
-                    normalized_embeddings = np.empty(embedding.shape)
-                    for i in range(embedding.shape[2]):
-                        normalized_embeddings[:, :, i] = self._normalize_embedding(
-                            embedding[:, :, i]
-                        )
+                    normalized_embeddings = self._normalize_embedding(embedding)
 
                     # Get the parent directory of the mat file
                     parent_dir = os.path.dirname(self._embedding_dir)
@@ -136,6 +133,7 @@ class VectorNormalizer(object):
                     # Save the mat file to the output directory
                     new_mat_file_path = os.path.join(new_parent_dir, file_name + ".mat")
                     sio.savemat(new_mat_file_path, {"embedding": normalized_embeddings})
+                    print(f"Saved normalized embedding to {new_mat_file_path}")
 
 
 def verify_normalization(normalized_embeddings):
@@ -169,6 +167,7 @@ def main():
     embedding_samples = vector_normalizer._embedding_samples
     vector_normalizer._calculate_parameters(embedding_samples)
     normalized_embedding_path = os.path.join(currentdir, "../normalized_embeddings")
+    vector_normalizer._save_normalized_embeddings(normalized_embedding_path)
     # Calculate the average and sd of each feature across the frames. Each embedding sample might contain different number of frames. So we need to calculate the average and sd of each feature across the frames for each embedding sample.
 
     # Calculate the average and sd of each feature across the frames for each embedding sample
