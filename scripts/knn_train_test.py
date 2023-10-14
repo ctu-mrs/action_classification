@@ -73,7 +73,7 @@ class ActionClassification(object):
 def main():
     # Get the path to the embeddings
     currentdir = os.path.dirname(os.path.realpath(__file__))
-    embedding_path = os.path.join(currentdir, "../embeddings_utd_mhad")
+    embedding_path = os.path.join(currentdir, "../normalized_embeddings/")
     print("Initializing Action Classifier")
     action_classifier = ActionClassification(embedding_path)
     print("Action Classifier Initialized")
@@ -89,7 +89,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         [sample for sample in action_classifier._embedding_samples],
         [sample.class_name for sample in action_classifier._embedding_samples],
-        test_size=0.002,
+        test_size=0.2,
         random_state=42,
     )
     print("Training")
