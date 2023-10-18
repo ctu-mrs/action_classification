@@ -15,7 +15,7 @@ import sys
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(currentdir, "../utils/"))
-from custom_classes import PoseSample, Utilities
+from custom_classes import PoseSample, load_embedding_samples
 
 
 class ActionClassification(object):
@@ -33,8 +33,7 @@ class ActionClassification(object):
         self.n_dimensions = n_dimensions
         self.sliding_window_size = sliding_window_size
         self.n_neighbors = n_neighbors
-        utils = Utilities()
-        self._embedding_samples, self._class_names = utils._load_embedding_samples(
+        self._embedding_samples, self._class_names = load_embedding_samples(
             embedding_dir=embedding_dir, file_extension=file_extension
         )
 

@@ -6,7 +6,7 @@ from typing import Any
 import scipy.io as sio
 import os
 import numpy as np
-from custom_classes import PoseSample, Utilities
+from custom_classes import PoseSample, load_embedding_samples
 import matplotlib.pyplot as plt
 
 
@@ -25,8 +25,7 @@ class VectorNormalizer(object):
         self.n_dimensions = n_dimensions
         self.sliding_window_size = sliding_window_size
         self.n_neighbors = n_neighbors
-        utils = Utilities()
-        self._embedding_samples, self._class_names = utils._load_embedding_samples(
+        self._embedding_samples, self._class_names = load_embedding_samples(
             embedding_dir, file_extension
         )
 

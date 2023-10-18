@@ -22,33 +22,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 
-
-class PoseSample(object):
-    def __init__(self, name, class_name, embedding):
-        self.name = name
-        self.class_name = class_name
-        self.embedding = embedding
-
-    def __repr__(self) -> str:
-        return f"PoseSample(name={self.name}, class_name={self.class_name}, embedding={self.embedding})"
-
-
-def load_data(embedding_dir, file_extension="mat"):
-    """
-    Loads the data from the data directory and returns the data in a list of numpy arrays
-    """
-    embedding_samples = []
-    for root, directories, files in os.walk(embedding_dir):
-        for file in files:
-            if file.endswith(file_extension):
-                mat_file_path = os.path.join(root, file)
-                data = sio.loadmat(mat_file_path)
-                embedding = data["embedding"]
-                # The class is the name of the sub folder that contains the .mat file
-                class_name = os.path.basename(root)
-                embedding_samples.append(PoseSample(file, class_name, embedding))
-    class_names = np.unique([sample.class_name for sample in embedding_samples])
-    return embedding_samples, class_names
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(currentdir, "../utils/"))
+from custom_classes import PoseSample, load_embedding_samples
 
 
 def per_frame_data(embedding_samples):
@@ -121,7 +97,7 @@ def main():
     currentdir = os.path.dirname(os.path.realpath(__file__))
     embedding_path = os.path.join(currentdir, "../embeddings_utd_mhad")
     print("Loading Data")
-    embedding_samples, class_names = load_data(embedding_path)
+    embedding_samples, class_names = load_embedding_samples(embedding_path)
     training_data = per_frame_data(embedding_samples)
     training_data, val_data = train_test_split(
         training_data, test_size=0.2, random_state=42
