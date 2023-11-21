@@ -163,7 +163,7 @@ class PostTrackingClass(object):
             landnmark_img = self.br.cv2_to_imgmsg(image_2BGR, "rgb8")
 
             self.image_pub.publish(landnmark_img)
-            self.landmarkpub.publish(self.landmarkcoords)
+            self.landmarkpub.publish(to_be_sent_landmarks)
             embedder_obj = FeatureVectorEmbedder()
             embedding_to_be_displayed = embedder_obj(
                 to_be_sent_landmarks, self.image_header.stamp.to_sec()
