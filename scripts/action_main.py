@@ -15,7 +15,9 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 
 
 class ActionClassification(object):
-    def __init__(self, embedding_samples, class_names):
+    def __init__(
+        self, embedding_samples, class_names, preprocessing_func=uniform_subsample
+    ):
         self._embedding_samples, self._class_names = embedding_samples, class_names
         self._class_names = np.unique(
             [sample.class_name for sample in self._embedding_samples]
@@ -25,30 +27,52 @@ class ActionClassification(object):
         self._sliding_window_size = 30
         self._n_neighbors = 10
         self.mean_embedding_samples = self._generateMeanEmbeddings(
-            embedding_samples=self._embedding_samples
+            self._embedding_samples, preprocessing_func
         )
 
         self._generateBallTree()
 
-    def _generateMeanEmbeddings(self, embedding_samples):
+    def _generateMeanEmbeddings(self, embedding_samples, preprocessing_func):
         mean_embedding_samples = []
         for sample in embedding_samples:
-            # Calculate mean across the T dimension for each sample
-            mean_embedding = np.mean(sample.embedding, axis=2)
-
-            # Flatten the mean_embedding
-            flattened_mean_embedding = mean_embedding.reshape(-1)
-
-            # Append the flattened mean embedding to the list
+            preprocessed_embedding = preprocessing_func(sample.embedding)
             mean_embedding_samples.append(
                 PoseSample(
-                    name=sample.name,  # or some unique identifier for the sample
+                    name=sample.name,
                     class_name=sample.class_name,
-                    embedding=flattened_mean_embedding,
+                    embedding=preprocessed_embedding,
                 )
             )
-
         return mean_embedding_samples
+
+    @staticmethod
+    def uniform_subsample(sequence, n_samples=50):
+        """
+        Uniformly subsample n_samples from the sequence.
+        """
+        T = sequence.shape[2]
+        indices = np.linspace(0, T - 1, n_samples, dtype=int)
+        return sequence[:, :, indices].reshape(-1)
+
+    def extract_frequency_features(sequence):
+        """
+        Extract frequency domain features using the Fourier Transform.
+        """
+        # Assuming the sequence shape is (341, 3, T)
+        T = sequence.shape[2]
+        freq_features = np.fft.rfft(sequence, axis=2)  # Real FFT
+        return freq_features.reshape(-1)
+
+    def autocorrelation(sequence, max_lag=10):
+        """
+        Compute the autocorrelation of the sequence up to max_lag.
+        """
+        # Flatten the sequence spatially, keep the temporal dimension
+        sequence_flat = sequence.reshape(-1, sequence.shape[2])
+        result = np.correlate(sequence_flat, sequence_flat, mode="full")
+        mid = result.shape[0] // 2
+        autocorr = result[mid : mid + max_lag]  # Take autocorrelation at different lags
+        return autocorr
 
     def _generateBallTree(self, leaf_size=40):
         # Generate a Ball Tree using the flattened mean embeddings
@@ -160,18 +184,6 @@ def main():
     print(accuracy_score(y_true, y_pred))
     print(confusion_matrix(y_true, y_pred))
     print(classification_report(y_true, y_pred))
-
-    # # Test the classifier on the test samples
-    # correct = 0
-    # for sample in test_samples:
-    #     predicted_class = action_classifier.classify(sample.embedding)
-    #     if predicted_class == sample.class_name:
-    #         correct += 1
-    #     else:
-    #         print(
-    #             f"Predicted class: {predicted_class}, Actual class: {sample.class_name}"
-    #         )
-    # print(f"Accuracy: {correct/len(test_samples)}")
 
 
 if __name__ == "__main__":
