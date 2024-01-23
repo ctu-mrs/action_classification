@@ -44,3 +44,10 @@ def load_embedding_samples(embedding_dir, file_extension="mat"):
     class_names = np.unique([sample.class_name for sample in embedding_samples])
     print("Embedding samples loaded using Utilities")
     return embedding_samples, class_names
+
+
+def mean_vector(embedding_samples):
+    """
+    Computes the mean vector of a list of embedding samples.
+    """
+    return np.mean(np.array([sample.embedding for sample in embedding_samples]), axis=0)
