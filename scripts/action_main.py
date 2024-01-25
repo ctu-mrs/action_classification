@@ -15,9 +15,9 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 
 
 class ActionClassification(object):
-    def __init__(
-        self, embedding_samples, class_names, preprocessing_func=uniform_subsample
-    ):
+    def __init__(self, embedding_samples, class_names, preprocessing_func=None):
+        if preprocessing_func is None:
+            preprocessing_func = self.uniform_subsample
         self._embedding_samples, self._class_names = embedding_samples, class_names
         self._class_names = np.unique(
             [sample.class_name for sample in self._embedding_samples]
@@ -45,8 +45,7 @@ class ActionClassification(object):
             )
         return mean_embedding_samples
 
-    @staticmethod
-    def uniform_subsample(sequence, n_samples=50):
+    def uniform_subsample(self, sequence, n_samples=10):
         """
         Uniformly subsample n_samples from the sequence.
         """
@@ -54,7 +53,7 @@ class ActionClassification(object):
         indices = np.linspace(0, T - 1, n_samples, dtype=int)
         return sequence[:, :, indices].reshape(-1)
 
-    def extract_frequency_features(sequence):
+    def extract_frequency_features(self, sequence):
         """
         Extract frequency domain features using the Fourier Transform.
         """
@@ -63,7 +62,7 @@ class ActionClassification(object):
         freq_features = np.fft.rfft(sequence, axis=2)  # Real FFT
         return freq_features.reshape(-1)
 
-    def autocorrelation(sequence, max_lag=10):
+    def autocorrelation(self, sequence, max_lag=10):
         """
         Compute the autocorrelation of the sequence up to max_lag.
         """
@@ -93,11 +92,22 @@ class ActionClassification(object):
 
         self.ball_tree = BallTree(embeddings_array, leaf_size=leaf_size)
 
-    def embedding_filter(self, embedding, filter_limit=50):
-        "Uses ball tree to find the closest embeddings to the input embedding"
-        mean_embedding = np.mean(embedding, axis=2)
-        mean_embedding = mean_embedding.reshape(1, -1)
-        distances, indices = self.ball_tree.query(mean_embedding, k=filter_limit)
+    def embedding_filter(self, embedding, filter_limit=50, preprocessing_func=None):
+        """
+        Uses ball tree to find the closest embeddings to the input embedding.
+        Applies the same preprocessing to the input embedding as was done to the training samples.
+        """
+        if preprocessing_func is not None:
+            processed_embedding = preprocessing_func(embedding)
+        else:
+            processed_embedding = (
+                embedding  # Fallback if no preprocessing function is provided
+            )
+
+        processed_embedding = processed_embedding.reshape(
+            1, -1
+        )  # Reshape for BallTree query
+        distances, indices = self.ball_tree.query(processed_embedding, k=filter_limit)
         return [self.mean_embedding_samples[index] for index in indices[0]]
 
     def dtw_distances(self, X, Y):
@@ -115,10 +125,19 @@ class ActionClassification(object):
         return distance
 
     def classify(
-        self, input_embedding, filter_limit=50, max_dtw_threshold=float("inf")
+        self,
+        input_embedding,
+        filter_limit=50,
+        max_dtw_threshold=float("inf"),
+        preprocessing_func=None,
     ):
         # Step 1: Retrieve initial candidate set using BallTree
-        candidates = self.embedding_filter(input_embedding, filter_limit=filter_limit)
+        # Step 1: Retrieve initial candidate set using BallTree
+        candidates = self.embedding_filter(
+            input_embedding,
+            filter_limit=filter_limit,
+            preprocessing_func=preprocessing_func,
+        )
 
         # Step 2: Refine candidates using DTW
         refined_candidates = []
@@ -178,7 +197,9 @@ def main():
     for sample in test_samples:
         count += 1
         print(count)
-        predicted_class = action_classifier.classify(sample.embedding)
+        predicted_class = action_classifier.classify(
+            sample.embedding, preprocessing_func=ActionClassification.uniform_subsample
+        )
         y_pred.append(predicted_class)
         y_true.append(sample.class_name)
     print(accuracy_score(y_true, y_pred))
