@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 class ActionClassification(object):
     def __init__(self, embedding_samples, class_names, preprocessing_func=None):
         if preprocessing_func is None:
-            preprocessing_func = self.extract_frequency_features
+            preprocessing_func = self.autocorrelation
         self._embedding_samples, self._class_names = embedding_samples, class_names
         self._class_names = np.unique(
             [sample.class_name for sample in self._embedding_samples]
@@ -78,20 +78,27 @@ class ActionClassification(object):
         """
         # Flatten the sequence spatially, keep the temporal dimension
         sequence_flat = sequence.reshape(-1, sequence.shape[2])
-        result = np.correlate(sequence_flat, sequence_flat, mode="full")
-        mid = result.shape[0] // 2
-        autocorr = result[mid : mid + max_lag]  # Take autocorrelation at different lags
-        return autocorr
+
+        # Initialize an array to store autocorrelation results
+        autocorr_results = np.zeros((sequence_flat.shape[0], max_lag))
+
+        # Compute autocorrelation for each flattened feature
+        for i, feature in enumerate(sequence_flat):
+            full_corr = np.correlate(feature, feature, mode="full")
+            mid = len(full_corr) // 2
+            autocorr_results[i, :] = full_corr[mid : mid + max_lag]
+
+        # Aggregate the autocorrelation results (mean, sum, or any other method)
+        aggregated_autocorr = np.mean(autocorr_results, axis=0)
+
+        return aggregated_autocorr
 
     def _generateBallTree(self, leaf_size=40):
-        # Generate a Ball Tree using the flattened mean embeddings
-        embeddings = [sample.embedding for sample in self.mean_embedding_samples]
-
-        # Check if embeddings list is empty
-        if not embeddings:
-            raise ValueError(
-                "Mean embedding samples are empty. Cannot generate BallTree."
-            )
+        # Generate embeddings based on autocorrelation
+        embeddings = []
+        for sample in self._embedding_samples:
+            autocorr_embedding = self.autocorrelation(sample.embedding, max_lag=10)
+            embeddings.append(autocorr_embedding)
 
         # Ensure that embeddings is a 2D array
         embeddings_array = np.array(embeddings)
@@ -100,6 +107,7 @@ class ActionClassification(object):
                 "Embeddings array is not 2D. Check the data processing steps."
             )
 
+        # Construct the Ball Tree
         self.ball_tree = BallTree(embeddings_array, leaf_size=leaf_size)
 
     def embedding_filter(self, embedding, filter_limit=50, preprocessing_func=None):
@@ -110,7 +118,7 @@ class ActionClassification(object):
         if preprocessing_func is not None:
             processed_embedding = preprocessing_func(embedding)
         else:
-            processed_embedding = self.extract_frequency_features(
+            processed_embedding = self.autocorrelation(
                 embedding
             )  # Fallback if no preprocessing function is provided
 
@@ -138,7 +146,7 @@ class ActionClassification(object):
         self,
         input_embedding,
         filter_limit=50,
-        max_dtw_threshold=float("inf"),
+        max_dtw_threshold=300,
         preprocessing_func=None,
     ):
         # Step 1: Retrieve initial candidate set using BallTree
@@ -209,7 +217,7 @@ def main():
         print(count)
         predicted_class = action_classifier.classify(
             sample.embedding,
-            preprocessing_func=action_classifier.extract_frequency_features,
+            preprocessing_func=action_classifier.autocorrelation,
         )
         y_pred.append(predicted_class)
         y_true.append(sample.class_name)
