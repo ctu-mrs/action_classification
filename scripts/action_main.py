@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 class ActionClassification(object):
     def __init__(self, embedding_samples, class_names, preprocessing_func=None):
         if preprocessing_func is None:
-            preprocessing_func = self.uniform_subsample
+            preprocessing_func = self.extract_frequency_features
         self._embedding_samples, self._class_names = embedding_samples, class_names
         self._class_names = np.unique(
             [sample.class_name for sample in self._embedding_samples]
@@ -53,14 +53,24 @@ class ActionClassification(object):
         indices = np.linspace(0, T - 1, n_samples, dtype=int)
         return sequence[:, :, indices].reshape(-1)
 
-    def extract_frequency_features(self, sequence):
+    def extract_frequency_features(self, sequence, fixed_length=64500):
         """
-        Extract frequency domain features using the Fourier Transform.
+        Extract frequency domain features using the Fourier Transform and pad to a fixed length.
         """
-        # Assuming the sequence shape is (341, 3, T)
+        # Apply Fourier Transform
         T = sequence.shape[2]
         freq_features = np.fft.rfft(sequence, axis=2)  # Real FFT
-        return freq_features.reshape(-1)
+        flattened_freq_features = np.abs(freq_features).reshape(-1)
+
+        # Calculate the padding length
+        padding_length = max(0, fixed_length - len(flattened_freq_features))
+
+        # Pad the flattened array to the fixed length
+        padded_freq_features = np.pad(
+            flattened_freq_features, (0, padding_length), "constant"
+        )
+
+        return padded_freq_features
 
     def autocorrelation(self, sequence, max_lag=10):
         """
@@ -100,9 +110,9 @@ class ActionClassification(object):
         if preprocessing_func is not None:
             processed_embedding = preprocessing_func(embedding)
         else:
-            processed_embedding = (
-                embedding  # Fallback if no preprocessing function is provided
-            )
+            processed_embedding = self.extract_frequency_features(
+                embedding
+            )  # Fallback if no preprocessing function is provided
 
         processed_embedding = processed_embedding.reshape(
             1, -1
@@ -198,7 +208,8 @@ def main():
         count += 1
         print(count)
         predicted_class = action_classifier.classify(
-            sample.embedding, preprocessing_func=ActionClassification.uniform_subsample
+            sample.embedding,
+            preprocessing_func=action_classifier.extract_frequency_features,
         )
         y_pred.append(predicted_class)
         y_true.append(sample.class_name)
