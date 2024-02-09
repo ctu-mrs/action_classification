@@ -1,139 +1,77 @@
-# Create an autoencoder model and save it to a file
-"""
-It loads the embedding samples, and trains on them frame by frame. It then saves the model to a file.
-"""
-import scipy.io as sio
-import os
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from keras import layers
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Bidirectional
-from keras.callbacks import ModelCheckpoint
-from keras.models import load_model
-import matplotlib.pyplot as plt
-import sys
-import argparse
-import pickle
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
-from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Flatten, Reshape
+from tensorflow.keras.optimizers import Adam
+import os
+import sys
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(currentdir, "../utils/"))
 from custom_classes import PoseSample, load_embedding_samples
 
 
-def per_frame_data(embedding_samples):
-    """
-    Takes in a list of embedding samples and returns the data in a format that can be used to train the autoencoder
-    """
-    per_frame_data = []
-    for sample in embedding_samples:
-        sample_flat = np.swapaxes(
-            sample.embedding.reshape(341 * 3, sample.embedding.shape[2]), 0, 1
-        )
-        print(sample_flat.shape)
-        for frame in sample_flat:
-            per_frame_data.append(frame)
-    print(len(per_frame_data))
-    return np.array(per_frame_data)
+def build_autoencoder(input_shape=(1023,)):
+    # Encoder
+    inputs = Input(shape=input_shape)
+    encoded = Dense(512, activation="relu")(inputs)
+    encoded = Dense(256, activation="relu")(encoded)
+    encoded = Dense(128, activation="relu")(encoded)  # Bottleneck layer
 
+    # Decoder
+    decoded = Dense(256, activation="relu")(encoded)
+    decoded = Dense(512, activation="relu")(decoded)
+    decoded = Dense(input_shape[0], activation="sigmoid")(decoded)
 
-def create_model(input_shape=(1023,)):
-    input_layer = keras.Input(shape=input_shape)
+    # Autoencoder
+    autoencoder = Model(inputs, decoded)
+    autoencoder.compile(optimizer=Adam(), loss="mse")
 
-    encoding_layer1 = layers.Dense(512, activation="relu")(input_layer)
-    encoding_layer2 = layers.Dense(256, activation="relu")(encoding_layer1)
-
-    bottleneck = layers.Dense(128, activation="relu")(encoding_layer2)
-
-    decoding_layer1 = layers.Dense(256, activation="relu")(bottleneck)
-    decoding_layer2 = layers.Dense(512, activation="relu")(decoding_layer1)
-
-    output_layer = layers.Dense(1023, activation="relu")(decoding_layer2)
-
-    model = keras.Model(inputs=input_layer, outputs=output_layer, name="autoencoder")
-    model.compile(optimizer="adam", loss="mean_squared_error")
-    model.summary()
-    return model
-
-
-# def train_model(model, X_train, X_test, y_train, y_test, batch_size=32, epochs=100):
-#     checkpoint = ModelCheckpoint(
-#         "autoencoder.h5",
-#         monitor="val_loss",
-#         verbose=1,
-#         save_best_only=True,
-#         mode="auto",
-#         period=1,
-#     )
-#     callbacks_list = [checkpoint]
-#     history = model.fit(
-#         X_train,
-#         X_train,
-#         batch_size=batch_size,
-#         epochs=epochs,
-#         validation_data=(X_test, X_test),
-#         callbacks=callbacks_list,
-#     )
-#     return history
-
-
-def plot_loss(history):
-    plt.plot(history.history["loss"], label="Training Loss")
-    plt.plot(history.history["val_loss"], label="Validation Loss")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.show()
+    return autoencoder
 
 
 def main():
+
     # Get the path to the embeddings
     currentdir = os.path.dirname(os.path.realpath(__file__))
-    embedding_path = os.path.join(currentdir, "../embeddings_utd_mhad")
-    print("Loading Data")
-    embedding_samples, class_names = load_embedding_samples(embedding_path)
-    training_data = per_frame_data(embedding_samples)
-    training_data, val_data = train_test_split(
-        training_data, test_size=0.2, random_state=42
+    embedding_path = os.path.join(currentdir, "../normalized_embeddings/")
+    embedding_samples, _ = load_embedding_samples(
+        embedding_dir=embedding_path, file_extension="mat"
     )
-    print("Data Loaded")
-    print("Creating Model")
-    model = create_model()
-    print("Model Created")
-    log_dir = "logs"
-    tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
-    model_checkpoint_callback = ModelCheckpoint(
-        "autoencoder_best_model.h5", save_best_only=True, monitor="val_loss"
-    )
-    early_stopping_callback = EarlyStopping(
-        monitor="val_loss", patience=5, restore_best_weights=True
-    )
-    model.fit(
-        training_data,
-        training_data,
-        epochs=200,
-        batch_size=32,
+    print("Loaded embeddings!")
+    print(f"Number of samples: {len(embedding_samples)}")
+    flattened_data = []
+    for sample in embedding_samples:
+        # Convert each embedding to a 1D array
+        for i in range(sample.embedding.shape[2]):
+            per_frame = sample.embedding[:, :, i]
+            flattened_data.append(per_frame.flatten())
+    print("Flattened data!")
+    print(f"Number of flattened samples: {len(flattened_data)}")
+    print(f"Shape of each sample: {flattened_data[0].shape}")
+    # Convert to numpy array
+    flattened_data = np.array(flattened_data)
+    X_train, X_val = train_test_split(flattened_data, test_size=0.2, random_state=42)
+
+    autoencoder = build_autoencoder(input_shape=(1023,))
+    print("Built autoencoder model!")
+    autoencoder.fit(
+        X_train,
+        X_train,
+        epochs=100,
+        batch_size=256,
         shuffle=True,
-        validation_data=(val_data, val_data),
-        callbacks=[
-            tensorboard_callback,
-            model_checkpoint_callback,
-            early_stopping_callback,
-        ],
+        validation_data=(X_val, X_val),
     )
-    # Reconstruct the validation data
-    reconstructed_val_data = model.predict(val_data)
+    print("Trained autoencoder model!")
+    # Check the accuracy of the model
+    val_loss = autoencoder.evaluate(X_val, X_val)
+    print(f"Validation Loss: {val_loss}")
 
-    # Compute the mean squared error on the validation data
-    mse = np.mean(np.square(val_data - reconstructed_val_data))
-
-    print(f"Mean Squared Error on validation data: {mse}")
+    # Save the model
+    autoencoder.save(os.path.join(currentdir, "autoencoder.keras"))
+    print("Autoencoder model saved!")
 
 
 if __name__ == "__main__":
