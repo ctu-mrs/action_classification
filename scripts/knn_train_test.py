@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+from tensorflow.keras.models import load_model, Model
 import time
 import sys
 
@@ -39,12 +40,13 @@ class ActionClassification(object):
 
     def dtw_distances(self, X, Y):
         """
-        This method takes in two embeddings, flattens the (341,3,t) array to (1023, t) and then computes the dtw distance between the two embeddings.
-
+        Calculates DTW distances between two samples. The samples are of (t,1,128) shape. The samples are reshaped to (t,128) and then the fastdtw function is used to calculate the distance.
         """
-        X = np.swapaxes(X.reshape(self.n_embeddings * 3, X.shape[2]), 0, 1)
-        Y = np.swapaxes(Y.reshape(self.n_embeddings * 3, Y.shape[2]), 0, 1)
-        distance, path = fastdtw(X, Y, dist=euclidean)
+        X = np.squeeze(X, axis=1)
+        Y = np.squeeze(Y, axis=1)
+        # X = np.swapaxes(X.reshape(self.n_embeddings * 3, X.shape[2]), 0, 1)
+        # Y = np.swapaxes(Y.reshape(self.n_embeddings * 3, Y.shape[2]), 0, 1)
+        distance, path = fastdtw(X, Y, dist=euclidean, radius=1)
         return distance
 
     def _generateBallTree(self, leaf_size=40):
@@ -63,22 +65,19 @@ class ActionClassification(object):
         )
         return ball_tree
 
-    def knn_dtw_classify(self, embedding_seq, n_neighbors=10):
-        """
-        This methodes takes a sequence of embeddings and classify the sequence into a class as defined by the class names. It classifies the sequence using a ball tree implementation of knn and uses dtw as a distance metric.
-        """
 
 
 def main():
     # Get the path to the embeddings
     currentdir = os.path.dirname(os.path.realpath(__file__))
-    embedding_path = os.path.join(currentdir, "../normalized_embeddings/")
+    embedding_path = os.path.join(currentdir, "../encoded_embeddings/")
     print("Initializing Action Classifier")
     action_classifier = ActionClassification(embedding_path)
     print("Action Classifier Initialized")
     print(action_classifier._embedding_samples[0].embedding.shape)
     # Reshaping the (341, 3, t) to (1023, t)
     # embedding = embedding.reshape(1023, embedding.shape[2])
+
     print(
         action_classifier.dtw_distances(
             action_classifier._embedding_samples[0].embedding,
@@ -95,7 +94,8 @@ def main():
     print(len(X_test))
     y_pred = []
     start_time = time.process_time()
-    for test_sample in X_test:
+    count = 0
+    for test_sample in X_test: 
         distances = []
         for train_sample in X_train:
             distances.append(
@@ -104,6 +104,8 @@ def main():
                 )
             )
         y_pred.append(y_train[np.argmin(distances)])
+        count+=1
+        print(count)
     print("Testing")
     end_time = time.process_time()
     print(f"Time taken: {end_time - start_time}")
