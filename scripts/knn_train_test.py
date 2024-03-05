@@ -48,7 +48,7 @@ class ActionClassification(object):
         Y = np.squeeze(Y, axis=1)
         # X = np.swapaxes(X.reshape(self.n_embeddings * 3, X.shape[2]), 0, 1)
         # Y = np.swapaxes(Y.reshape(self.n_embeddings * 3, Y.shape[2]), 0, 1)
-        distance, path = fastdtw(X, Y, dist=euclidean, radius=1)
+        distance, path = fastdtw(X, Y)
         return distance, class_name
 
     def _generateBallTree(self, leaf_size=40):
@@ -79,7 +79,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         [sample for sample in action_classifier._embedding_samples],
         [sample.class_name for sample in action_classifier._embedding_samples],
-        test_size=0.1,
+        test_size=0.2,
         random_state=42,
     )
     print("Training")
