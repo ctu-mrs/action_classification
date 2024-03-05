@@ -11,6 +11,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from tensorflow.keras.models import load_model, Model
+from multiprocessing import Pool
 import time
 import sys
 
@@ -38,16 +39,17 @@ class ActionClassification(object):
             embedding_dir=embedding_dir, file_extension=file_extension
         )
 
-    def dtw_distances(self, X, Y):
+    def dtw_distances(self, args):
         """
         Calculates DTW distances between two samples. The samples are of (t,1,128) shape. The samples are reshaped to (t,128) and then the fastdtw function is used to calculate the distance.
         """
+        X, Y, class_name = args
         X = np.squeeze(X, axis=1)
         Y = np.squeeze(Y, axis=1)
         # X = np.swapaxes(X.reshape(self.n_embeddings * 3, X.shape[2]), 0, 1)
         # Y = np.swapaxes(Y.reshape(self.n_embeddings * 3, Y.shape[2]), 0, 1)
         distance, path = fastdtw(X, Y, dist=euclidean, radius=1)
-        return distance
+        return distance, class_name
 
     def _generateBallTree(self, leaf_size=40):
         """
@@ -66,7 +68,6 @@ class ActionClassification(object):
         return ball_tree
 
 
-
 def main():
     # Get the path to the embeddings
     currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -75,19 +76,10 @@ def main():
     action_classifier = ActionClassification(embedding_path)
     print("Action Classifier Initialized")
     print(action_classifier._embedding_samples[0].embedding.shape)
-    # Reshaping the (341, 3, t) to (1023, t)
-    # embedding = embedding.reshape(1023, embedding.shape[2])
-
-    print(
-        action_classifier.dtw_distances(
-            action_classifier._embedding_samples[0].embedding,
-            action_classifier._embedding_samples[1].embedding,
-        )
-    )
     X_train, X_test, y_train, y_test = train_test_split(
         [sample for sample in action_classifier._embedding_samples],
         [sample.class_name for sample in action_classifier._embedding_samples],
-        test_size=0.2,
+        test_size=0.1,
         random_state=42,
     )
     print("Training")
@@ -95,18 +87,22 @@ def main():
     y_pred = []
     start_time = time.process_time()
     count = 0
-    for test_sample in X_test: 
-        distances = []
-        for train_sample in X_train:
-            distances.append(
-                action_classifier.dtw_distances(
-                    test_sample.embedding, train_sample.embedding
-                )
+    for test_sample in X_test:
+        with Pool(processes=4) as pool:  # Use 4 processes
+            results = pool.map(
+                action_classifier.dtw_distances,
+                [
+                    (
+                        test_sample.embedding,
+                        train_sample.embedding,
+                        train_sample.class_name,
+                    )
+                    for train_sample in X_train
+                ],
             )
-        y_pred.append(y_train[np.argmin(distances)])
-        count+=1
-        print(count)
-    print("Testing")
+        distances, class_names = zip(*results)
+        y_pred.append(class_names[np.argmin(distances)])
+
     end_time = time.process_time()
     print(f"Time taken: {end_time - start_time}")
     print(accuracy_score(y_test, y_pred))
