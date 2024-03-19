@@ -18,8 +18,14 @@ def build_autoencoder(input_shape=(1023,)):
     encoded = Dense(512, activation="relu")(inputs)
     encoded = Dense(256, activation="relu")(encoded)
     encoded = Dense(128, activation="relu")(encoded)  # Bottleneck layer
+    encoded = Dense(64, activation="relu")(encoded)  # Bottleneck layer
+    encoded = Dense(32, activation="relu")(encoded)  # Bottleneck layer
+    encoded = Dense(16, activation="relu")(encoded)  # Bottleneck layer
 
     # Decoder
+    decoded = Dense(16, activation="relu")(encoded)  # Bottleneck layer
+    decoded = Dense(32, activation="relu")(encoded)  # Bottleneck layer
+    decoded = Dense(64, activation="relu")(encoded)  # Bottleneck layer
     decoded = Dense(256, activation="relu")(encoded)
     decoded = Dense(512, activation="relu")(decoded)
     decoded = Dense(input_shape[0], activation="sigmoid")(decoded)
@@ -70,7 +76,7 @@ def main():
     print(f"Validation Loss: {val_loss}")
 
     # Save the model
-    autoencoder.save(os.path.join(currentdir, "autoencoder.keras"))
+    autoencoder.save(os.path.join(currentdir, "autoencoder_16.keras"))
     print("Autoencoder model saved!")
 
 
