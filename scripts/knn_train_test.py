@@ -20,6 +20,21 @@ sys.path.append(os.path.join(currentdir, "../utils/"))
 from custom_classes import PoseSample, load_embedding_samples
 
 
+def keogh_lower_bound(X, Y, r=1):
+    """
+    Compute the Keogh lower bound between two sequences.
+    """
+    lower_bound = 0
+    for i in range(len(X)):
+        lower = min(Y[max(0, i - r) : min(len(Y), i + r)])
+        upper = max(Y[max(0, i - r) : min(len(Y), i + r)])
+        if X[i] > upper:
+            lower_bound += (X[i] - upper) ** 2
+        elif X[i] < lower:
+            lower_bound += (lower - X[i]) ** 2
+    return np.sqrt(lower_bound)
+
+
 class ActionClassification(object):
     def __init__(
         self,
@@ -39,6 +54,11 @@ class ActionClassification(object):
             embedding_dir=embedding_dir, file_extension=file_extension
         )
 
+        self.max_shape = max(
+            sample.embedding.shape for sample in self._embedding_samples
+        )
+        self._generateBallTree()
+
     def dtw_distances(self, args):
         """
         Calculates DTW distances between two samples. The samples are of (t,1,128) shape. The samples are reshaped to (t,128) and then the fastdtw function is used to calculate the distance.
@@ -51,21 +71,67 @@ class ActionClassification(object):
         distance, path = fastdtw(X, Y)
         return distance, class_name
 
+    def keogh_lower_bound(X, Y, r=1):
+        """
+        Compute the Keogh lower bound between two sequences.
+        """
+        lower_bound = 0
+        for i in range(len(X)):
+            lower = min(Y[max(0, i - r) : min(len(Y), i + r)])
+            upper = max(Y[max(0, i - r) : min(len(Y), i + r)])
+            if X[i] > upper:
+                lower_bound += (X[i] - upper) ** 2
+            elif X[i] < lower:
+                lower_bound += (lower - X[i]) ** 2
+        return np.sqrt(lower_bound)
+
     def _generateBallTree(self, leaf_size=40):
         """
         This method generates a ball tree for the embedding samples. The ball tree is used to perform knn classification. It uses the custom dtw function as a distance metric.
         """
-        dtw_distance_metric = DistanceMetric.get_metric(
-            "pyfunc", func=self.dtw_distances
+        keogh_distance_metric = DistanceMetric.get_metric(
+            "pyfunc", func=keogh_lower_bound
         )
-        embedding_samples = [sample.embedding for sample in self._embedding_samples]
-        ball_tree = BallTree(
+
+        # Find the maximum shape of the embeddings
+        max_shape = max(sample.embedding.shape for sample in self._embedding_samples)
+
+        # Pad all embeddings to the maximum shape and flatten them
+        embedding_samples = [
+            np.ravel(
+                np.pad(
+                    np.squeeze(sample.embedding, axis=1),
+                    ((0, max_shape[0] - sample.embedding.shape[0]), (0, 0)),
+                )
+            )
+            for sample in self._embedding_samples
+        ]
+
+        self.ball_tree = BallTree(
             embedding_samples,
-            metric="pyfunc",
+            metric=keogh_distance_metric,
             leaf_size=leaf_size,
-            metric_params={"n_embeddings": self.n_embeddings},
         )
-        return ball_tree
+
+    def classify(self, test_sample):
+        # Flatten the test_sample.embedding into a 1D array and reshape it to a 2D array
+        test_sample_embedding = np.ravel(test_sample.embedding).reshape(1, -1)
+
+        # Use the BallTree to find the training samples with the smallest Keogh lower bounds
+        indices = self.ball_tree.query(test_sample_embedding, k=self.n_neighbors)
+
+        # Compute the full DTW distance between the test sample and the remaining training samples
+        with Pool(processes=4) as pool:  # Use 4 processes
+            distances = pool.map(
+                self.dtw_distances,
+                [
+                    (test_sample_embedding, self._embedding_samples[i].embedding)
+                    for i in indices
+                ],
+            )
+
+        # Classify the test sample based on the training sample with the smallest DTW distance
+        return self._class_names[np.argmin(distances)]
 
 
 def main():
@@ -79,7 +145,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         [sample for sample in action_classifier._embedding_samples],
         [sample.class_name for sample in action_classifier._embedding_samples],
-        test_size=0.2,
+        test_size=0.01,
         random_state=42,
     )
     print("Training")
@@ -88,20 +154,7 @@ def main():
     start_time = time.process_time()
     count = 0
     for test_sample in X_test:
-        with Pool(processes=4) as pool:  # Use 4 processes
-            results = pool.map(
-                action_classifier.dtw_distances,
-                [
-                    (
-                        test_sample.embedding,
-                        train_sample.embedding,
-                        train_sample.class_name,
-                    )
-                    for train_sample in X_train
-                ],
-            )
-        distances, class_names = zip(*results)
-        y_pred.append(class_names[np.argmin(distances)])
+        y_pred.append(action_classifier.classify(test_sample))
 
     end_time = time.process_time()
     print(f"Time taken: {end_time - start_time}")
