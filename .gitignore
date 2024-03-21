@@ -1,1 +1,41 @@
 .vscode/
+# Build files
+build/
+devel/
+install/
+logs/
+build_isolated/
+devel_isolated/
+install_isolated/
+
+# Temporary files
+*.tmp
+*~
+
+# IDE and editor files
+*.swp
+*.bak
+*.sublime-workspace
+*.sublime-project
+.vscode/
+.idea/
+*.clion*
+*.pyc
+__pycache__/
+*.launch~
+*.userprefs
+
+# Other files and folders to ignore
+.DS_Store
+Thumbs.db
+*.user
+*.orig
+
+# Ignore ROS bag files - large binary files used for data logging
+*.bag
+*.bag.active
+*.db3
+
+# If you're using Python virtual environments
+venv/
+*.venv/
