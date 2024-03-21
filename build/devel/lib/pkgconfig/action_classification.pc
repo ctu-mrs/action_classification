@@ -1,8 +1,0 @@
-prefix=/home/akash/swarm_ws/src/action_classification/build/devel
-
-Name: action_classification
-Description: Description of action_classification
-Version: 0.0.0
-Cflags: -I/home/akash/swarm_ws/src/action_classification/build/devel/include -I/usr/include/eigen3
-Libs: -L${prefix}/lib 
-Requires: geometry_msgs std_srvs nav_msgs roscpp rospy sensor_msgs std_msgs mrs_msgs mrs_lib message_runtime
