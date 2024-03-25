@@ -17,66 +17,48 @@ from custom_classes import PoseSample, load_embedding_samples
 
 class ActionClassificationWithDBA(object):
     def __init__(
-        self,
-        embedding_dir,
-        file_extension="mat",
-        n_clusters=10,
-        leaf_size=40,
+        self, embedding_dir, file_extension="mat", n_clusters=27, leaf_size=40
     ):
         self._embedding_samples, self._class_names = load_embedding_samples(
             embedding_dir=embedding_dir, file_extension=file_extension
         )
+        # Preprocess embeddings to have uniform length
+        self.embeddings, self.max_length = self.preprocess_embeddings(
+            [sample.embedding for sample in self._embedding_samples]
+        )
         self.n_clusters = n_clusters
         self.leaf_size = leaf_size
-        self.centroids, self.labels = self.compute_dba_centroids()
+        self.centroids, self.labels = self.compute_dba_centroids(self.embeddings)
         self.ball_tree = self.build_ball_tree()
 
-    def pad_sequences(
-        sequences,
-        maxlen=None,
-        dtype="float32",
-        padding="post",
-        truncating="post",
-        value=0.0,
-    ):
-        """Pads sequences to the same length."""
-        lengths = np.asarray([len(s) for s in sequences], dtype=np.int64)
-        num_samples = len(sequences)
-        if maxlen is None:
-            maxlen = np.max(lengths)
-
-        # Initialize the array to be returned
-        x = np.full((num_samples, maxlen, sequences[0].shape[-1]), value, dtype=dtype)
-        for i, s in enumerate(sequences):
-            if len(s) == 0:
-                continue  # Skip this sample because it's empty
-            if truncating == "pre":
-                trunc = s[-maxlen:]
-            else:
-                trunc = s[:maxlen]
-
-            # Check if we need to truncate at all
-            trunc = np.asarray(trunc, dtype=dtype)
-            if padding == "post":
-                x[i, : len(trunc)] = trunc
-            else:
-                x[i, -len(trunc) :] = trunc
-        return x
-
-    def compute_dba_centroids(self):
-        embeddings = [sample.embedding for sample in self._embedding_samples]
-        embeddings_padded = [
-            self.pad_sequences(sample.embedding) for sample in self._embedding_samples
-        ]
-        # Now embeddings_padded is a uniformly shaped array suitable for TimeSeriesKMeans
-        model = TimeSeriesKMeans(
-            n_clusters=self.n_clusters, metric="dtw", verbose=False
+    def preprocess_embeddings(self, embeddings):
+        # Determine maximum length
+        max_length = max(embedding.shape[0] for embedding in embeddings)
+        # Pad sequences
+        padded_embeddings = np.array(
+            [self.pad_sequence(embedding, max_length) for embedding in embeddings]
         )
-        labels = model.fit_predict(embeddings_padded)
+        return padded_embeddings, max_length
+
+    def pad_sequence(self, sequence, max_length):
+        # Assuming the sequence shape is (t, 1, 16) and padding is needed across 't'
+        padded_sequence = np.zeros((max_length, 1, 16))
+        sequence_length = sequence.shape[0]
+        padded_sequence[:sequence_length, :, :] = sequence
+        return np.squeeze(padded_sequence, axis=1)
+
+    def compute_dba_centroids(self, embeddings):
+        # Flatten the embeddings for k-means
+        # Reshape back to (n_samples, max_length, 16) for TimeSeriesKMeans
+        model = TimeSeriesKMeans(
+            n_clusters=self.n_clusters, metric="dtw", max_iter=10, verbose=True
+        )
+        labels = model.fit_predict(embeddings)
         centroids = model.cluster_centers_
         return centroids, labels
 
     def build_ball_tree(self):
+        # Flatten centroids for the BallTree
         centroids_flat = self.centroids.reshape((self.centroids.shape[0], -1))
         ball_tree = BallTree(centroids_flat, leaf_size=self.leaf_size)
         return ball_tree
@@ -111,7 +93,7 @@ def main():
     y_pred = []
     for test_sample in X_test:
         _, nearest_centroid_idx = classifier.query_ball_tree(
-            test_sample.embedding.reshape(-1)
+            classifier.pad_sequence(test_sample.embedding, classifier.max_length)
         )
         predicted_class = classifier._class_names[nearest_centroid_idx[0][0]]
         y_pred.append(predicted_class)
