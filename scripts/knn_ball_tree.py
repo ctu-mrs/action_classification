@@ -22,15 +22,27 @@ class ActionClassificationWithDBA(object):
         self._embedding_samples, self._class_names = load_embedding_samples(
             embedding_dir=embedding_dir, file_extension=file_extension
         )
+
+        # Prepare your dataset: load, split, etc.
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            [
+                sample.embedding for sample in self._embedding_samples
+            ],  # Use embeddings directly
+            [sample.class_name for sample in self._embedding_samples],
+            test_size=0.2,
+            random_state=42,
+        )
         # A dictionary to map embeddings to class names
         self._index_to_class = {
-            emb_idx: sample.class_name
-            for emb_idx, sample in enumerate(self._embedding_samples)
+            emb_idx: sample_class for emb_idx, sample_class in enumerate(self.y_train)
         }
-
-        self.embeddings, self.labels, self.max_length = None, None, None
+        print(len(self.X_train), len(self.X_test))
         self.leaf_size = leaf_size
-        self.ball_tree, self.centroids = None, None
+        self.embeddings, self.labels, self.max_length = self.preprocess_and_cluster(
+            embeddings=[sample for sample in self.X_train],
+            n_clusters=10,
+        )
+        self.ball_tree, self.centroids = self.build_ball_tree()
 
     def preprocess_and_cluster(self, embeddings, n_clusters):
         max_length = max(embedding.shape[0] for embedding in embeddings)
@@ -50,6 +62,18 @@ class ActionClassificationWithDBA(object):
         sequence_length = sequence.shape[0]
         padded_sequence[:sequence_length, :, :] = sequence
         return np.squeeze(padded_sequence, axis=1)
+
+    # A function that displays the majority class in each cluster
+    def display_cluster_majority_class(self):
+        cluster_majority_class = {}
+        for idx in np.unique(self.labels):
+            cluster_embeddings_indexes = np.where(self.labels == idx)[0]
+            cluster_classes = [
+                self._index_to_class[index] for index in cluster_embeddings_indexes
+            ]
+            majority_class = max(set(cluster_classes), key=cluster_classes.count)
+            cluster_majority_class[idx] = majority_class
+        return cluster_majority_class
 
     def build_ball_tree(self):
         centroids_flat = self.centroids.reshape((self.centroids.shape[0], -1))
@@ -76,42 +100,26 @@ class ActionClassificationWithDBA(object):
                 candidate_class_name = self._index_to_class[index_of_candidate]
                 nearest_neighbors.append((dtw_distance, candidate_class_name))
         nearest_neighbors.sort(key=lambda x: x[0])
-        print("Nearest Neighbors", nearest_neighbors[:n_neighbors])
         return nearest_neighbors[:n_neighbors]
 
 
-def main():
+def main(
+    num_of_clusters=5, number_of_candidates=1, number_of_neighbors=5, leaf_size=40
+):
     embedding_dir = os.path.join(currentdir, "../encoded16_embeddings/")
     print("Initializing Action Classifier")
     classifier = ActionClassificationWithDBA(embedding_dir)
     print("Action Classifier Initialized")
 
-    # Prepare your dataset: load, split, etc.
-    X_train, X_test, y_train, y_test = train_test_split(
-        [
-            sample.embedding for sample in classifier._embedding_samples
-        ],  # Use embeddings directly
-        [sample.class_name for sample in classifier._embedding_samples],
-        test_size=0.2,
-        random_state=42,
-    )
-    print(len(X_train), len(X_test))
-    classifier.embeddings, classifier.labels, classifier.max_length = (
-        classifier.preprocess_and_cluster(
-            embeddings=[sample for sample in X_train],
-            n_clusters=5,
-        )
-    )
-    classifier.ball_tree, classifier.centroids = classifier.build_ball_tree()
     start_time = time.process_time()
     print("Evaluating")
+    print(classifier.display_cluster_majority_class())
     y_pred = []
-    for idx_test, test_embedding in enumerate(X_test):
+    for idx_test, test_embedding in enumerate(classifier.X_test):
         nearest_neighbors = classifier.find_nearest_neighbors_dtw(
             classifier.pad_sequence(test_embedding, classifier.max_length),
-            n_neighbors=5,  # Adjust based on your requirements
+            n_neighbors=10,  # Adjust based on your requirements
         )
-        print("The expected class is: ", y_test[idx_test])
         # Predict the class based on nearest neighbors
         # This example simply takes the mode of the nearest neighbor classes; adjust as needed
         nearest_classes = [neighbor[1] for neighbor in nearest_neighbors]
@@ -119,9 +127,9 @@ def main():
         y_pred.append(predicted_class)
 
     print(f"Time taken: {time.process_time() - start_time}")
-    print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
-    print(confusion_matrix(y_test, y_pred))
-    print(classification_report(y_test, y_pred))
+    print(f"Accuracy: {accuracy_score(classifier.y_test, y_pred)}")
+    print(confusion_matrix(classifier.y_test, y_pred))
+    print(classification_report(classifier.y_test, y_pred))
 
 
 if __name__ == "__main__":
