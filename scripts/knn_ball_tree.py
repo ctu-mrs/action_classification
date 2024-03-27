@@ -17,7 +17,7 @@ from custom_classes import PoseSample, load_embedding_samples
 
 class ActionClassificationWithDBA(object):
     def __init__(
-        self, embedding_dir, file_extension="mat", n_clusters=10, leaf_size=40
+        self, embedding_dir, n_clusters=10, leaf_size=40, file_extension="mat"
     ):
         self._embedding_samples, self._class_names = load_embedding_samples(
             embedding_dir=embedding_dir, file_extension=file_extension
@@ -38,9 +38,10 @@ class ActionClassificationWithDBA(object):
         }
         print(len(self.X_train), len(self.X_test))
         self.leaf_size = leaf_size
+        self.n_clusters = n_clusters
         self.embeddings, self.labels, self.max_length = self.preprocess_and_cluster(
             embeddings=[sample for sample in self.X_train],
-            n_clusters=10,
+            n_clusters=n_clusters,
         )
         self.ball_tree, self.centroids = self.build_ball_tree()
 
@@ -85,8 +86,12 @@ class ActionClassificationWithDBA(object):
         distances, indices = self.ball_tree.query(sample_flat, k=n_candidates)
         return distances, indices
 
-    def find_nearest_neighbors_dtw(self, sample_embedding, n_neighbors=5):
-        distances, indices = self.query_ball_tree(sample_embedding, n_candidates=1)
+    def find_nearest_neighbors_dtw(
+        self, sample_embedding, n_candidates=1, n_neighbors=5
+    ):
+        distances, indices = self.query_ball_tree(
+            sample_embedding, n_candidates=n_candidates
+        )
         nearest_neighbors = []
 
         for idx in indices[0]:
@@ -104,21 +109,24 @@ class ActionClassificationWithDBA(object):
 
 
 def main(
-    num_of_clusters=5, number_of_candidates=1, number_of_neighbors=5, leaf_size=40
+    num_of_clusters=8, number_of_candidates=3, number_of_neighbors=3, leaf_size=20
 ):
     embedding_dir = os.path.join(currentdir, "../encoded16_embeddings/")
     print("Initializing Action Classifier")
-    classifier = ActionClassificationWithDBA(embedding_dir)
+    classifier = ActionClassificationWithDBA(
+        embedding_dir, n_clusters=num_of_clusters, leaf_size=leaf_size
+    )
     print("Action Classifier Initialized")
 
+    print(classifier.display_cluster_majority_class())
     start_time = time.process_time()
     print("Evaluating")
-    print(classifier.display_cluster_majority_class())
     y_pred = []
-    for idx_test, test_embedding in enumerate(classifier.X_test):
+    for test_embedding in classifier.X_test:
         nearest_neighbors = classifier.find_nearest_neighbors_dtw(
             classifier.pad_sequence(test_embedding, classifier.max_length),
-            n_neighbors=10,  # Adjust based on your requirements
+            n_candidates=number_of_candidates,
+            n_neighbors=number_of_neighbors,
         )
         # Predict the class based on nearest neighbors
         # This example simply takes the mode of the nearest neighbor classes; adjust as needed
@@ -130,6 +138,7 @@ def main(
     print(f"Accuracy: {accuracy_score(classifier.y_test, y_pred)}")
     print(confusion_matrix(classifier.y_test, y_pred))
     print(classification_report(classifier.y_test, y_pred))
+    # return accuracy_score(classifier.y_test, y_pred)
 
 
 if __name__ == "__main__":
